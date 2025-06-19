@@ -1,0 +1,175 @@
+/**
+ * Record Page Specific Styles
+ */
+
+/* Visualization canvas */
+#visualizer {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    height: 100px;
+    width: 100%;
+}
+
+/* Recording controls */
+.recording-visualization {
+    position: relative;
+}
+
+#recordingTimer {
+    font-family: 'Courier New', monospace;
+    color: #dc3545;
+    text-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+}
+
+/* Metronome controls */
+.metronome-controls {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+}
+
+.metronome-controls .form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+#bpmInput {
+    max-width: 80px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Record buttons */
+#startRecording, #stopRecording {
+    min-width: 140px;
+}
+
+#startRecording {
+    position: relative;
+    overflow: hidden;
+}
+
+#startRecording::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+}
+
+#startRecording:not(:disabled):active::before {
+    width: 150px;
+    height: 150px;
+    opacity: 1;
+    transition: width 0.3s, height 0.3s, opacity 0.3s;
+}
+
+/* File upload styling */
+.custom-file-upload {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.custom-file-upload input[type="file"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+/* Processing animation */
+.processing-animation {
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #007bff 0%, #6610f2 100%);
+    background-size: 200% 100%;
+    animation: gradient 2s infinite;
+    margin-top: 10px;
+    border-radius: 2px;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Generation buttons hover effects */
+#generateInstrumental,
+#generateVocals,
+#generateChorus {
+    transition: all 0.3s;
+    position: relative;
+    z-index: 1;
+}
+
+#generateInstrumental:not(:disabled):hover,
+#generateVocals:not(:disabled):hover,
+#generateChorus:not(:disabled):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#generateInstrumental:not(:disabled):active,
+#generateVocals:not(:disabled):active,
+#generateChorus:not(:disabled):active {
+    transform: translateY(-1px);
+}
+
+/* Results section styling */
+#resultsSection {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.5s, transform 0.5s;
+}
+
+#resultsSection.d-block {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Audio player custom styling */
+audio {
+    background-color: #f8f9fa;
+    border-radius: 30px;
+}
+
+audio::-webkit-media-controls-panel {
+    background-color: #f8f9fa;
+}
+
+audio::-webkit-media-controls-play-button {
+    background-color: #0d6efd;
+    border-radius: 50%;
+    color: white;
+}
+
+/* Disable button styling */
+button:disabled {
+    cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .metronome-controls {
+        flex-direction: column;
+    }
+    
+    .metronome-controls > div {
+        margin-top: 10px;
+    }
+}

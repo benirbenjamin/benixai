@@ -1,0 +1,498 @@
+<%- include('partials/header', { pageTitle: 'Subscription Plans' }) %>
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1><i class="fas fa-crown me-2"></i>Subscription Plans</h1>
+            <p class="lead">Choose the right plan for your music creation needs.</p>
+        </div>
+    </div>
+    
+    <% if (subscription && subscription.active) { %>
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-success">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="alert-heading"><i class="fas fa-check-circle me-2"></i>You're subscribed!</h4>
+                            <p class="mb-0">
+                                You are currently on the <strong><%= subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1) %></strong> plan.
+                                <% if (subscription.plan === 'trial') { %>
+                                    Your free trial will expire on <%= new Date(subscription.expires_at).toLocaleDateString() %>.
+                                <% } else { %>
+                                    Your subscription will renew on <%= new Date(subscription.expires_at).toLocaleDateString() %>.
+                                <% } %>
+                            </p>
+                        </div>
+                        <button id="cancelSubscription" class="btn btn-outline-danger" data-subscription-id="<%= subscription.id %>">
+                            <i class="fas fa-times-circle me-2"></i>Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
+    
+    <% if (req.query.error === 'trial_used') { %>
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            You have already used your free trial. Please choose a paid plan to continue.
+        </div>
+    <% } else if (req.query.error === 'already_subscribed') { %>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            You already have an active subscription.
+        </div>
+    <% } %>
+    
+    <div class="row mb-4">
+        <% if (!subscription || !subscription.active || subscription.plan === 'trial') { %>
+            <div class="col-md-3 mb-4">
+                <div class="card border-primary h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Free Trial</h5>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h2 class="card-title text-primary">Free</h2>
+                        <p class="card-text">Experience BenixSpace with a limited free trial.</p>
+                        
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <%= freeTrial.durationDays %> days of access
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <%= freeTrial.dailySongLimit %> songs per day
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Voice to AI vocals
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                No instrumentals
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                No chorus generation
+                            </li>
+                        </ul>
+                          <% if (!subscription || !subscription.active) { %>
+                            <form action="/subscription/trial" method="post" class="mt-auto">
+                                <% if (req.query.error === 'trial_used') { %>
+                                    <button type="submit" class="btn btn-outline-primary w-100" disabled>
+                                        <i class="fas fa-ban me-2"></i>Trial Already Used
+                                    </button>
+                                <% } else { %>
+                                    <button type="submit" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-rocket me-2"></i>Start Free Trial
+                                    </button>
+                                <% } %>
+                            </form>
+                        <% } else { %>
+                            <button disabled class="btn btn-outline-secondary w-100 mt-auto">
+                                <i class="fas fa-check me-2"></i>Currently Active
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+        
+        <% plans.forEach(plan => { %>
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 <%= subscription && subscription.active && subscription.plan === plan.id ? 'border-success' : '' %>">
+                    <div class="card-header <%= subscription && subscription.active && subscription.plan === plan.id ? 'bg-success text-white' : '' %>">
+                        <h5 class="mb-0"><%= plan.name %></h5>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h2 class="card-title">$<%= plan.price.toFixed(2) %><small class="text-muted">/month</small></h2>
+                        <p class="card-text">Perfect for <%= plan.id === 'basic' ? 'beginners' : (plan.id === 'standard' ? 'regular users' : 'professional creators') %>.</p>
+                        
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <%= plan.dailySongLimit === Infinity ? 'Unlimited' : plan.dailySongLimit %> songs per day
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas <%= plan.features.vocal ? 'fa-check text-success' : 'fa-times text-danger' %> me-2"></i>
+                                Voice to AI vocals
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas <%= plan.features.instrumental ? 'fa-check text-success' : 'fa-times text-danger' %> me-2"></i>
+                                AI instrumentals
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas <%= plan.features.chorus ? 'fa-check text-success' : 'fa-times text-danger' %> me-2"></i>
+                                Chorus generation
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Premium support
+                            </li>
+                        </ul>
+                        
+                        <% if (subscription && subscription.active && subscription.plan === plan.id) { %>
+                            <button disabled class="btn btn-success w-100 mt-auto">
+                                <i class="fas fa-check me-2"></i>Current Plan
+                            </button>
+                        <% } else { %>
+                            <button class="btn btn-primary subscribe-btn w-100 mt-auto" data-plan="<%= plan.id %>" data-price="<%= plan.price %>">
+                                <i class="fas fa-credit-card me-2"></i>Subscribe
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+</div>
+
+<!-- Subscription Modal -->
+<div class="modal fade" id="subscriptionModal" tabindex="-1" aria-labelledby="subscriptionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="subscriptionModalLabel">Complete Your Subscription</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You are subscribing to the <strong id="planName"></strong> plan.</p>
+                  <div class="mb-4">
+                    <label class="form-label fw-bold">Select Subscription Duration</label>
+                    <div class="row duration-options">
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check duration-option">
+                                <input class="form-check-input" type="radio" name="duration" id="duration1" value="1" checked>
+                                <label class="form-check-label w-100 p-2 rounded" for="duration1">
+                                    <div class="d-flex justify-content-between">
+                                        <span>1 Month</span>
+                                        <span class="badge bg-primary">$<span class="base-price"></span></span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check duration-option">
+                                <input class="form-check-input" type="radio" name="duration" id="duration3" value="3">
+                                <label class="form-check-label w-100 p-2 rounded" for="duration3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>3 Months</span>
+                                        <span class="badge bg-success">5% OFF</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check duration-option">
+                                <input class="form-check-input" type="radio" name="duration" id="duration6" value="6">
+                                <label class="form-check-label w-100 p-2 rounded" for="duration6">
+                                    <div class="d-flex justify-content-between">
+                                        <span>6 Months</span>
+                                        <span class="badge bg-success">10% OFF</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check duration-option">
+                                <input class="form-check-input" type="radio" name="duration" id="duration9" value="9">
+                                <label class="form-check-label w-100 p-2 rounded" for="duration9">
+                                    <div class="d-flex justify-content-between">
+                                        <span>9 Months</span>
+                                        <span class="badge bg-success">15% OFF</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check duration-option">
+                                <input class="form-check-input" type="radio" name="duration" id="duration12" value="12">
+                                <label class="form-check-label w-100 p-2 rounded" for="duration12">
+                                    <div class="d-flex justify-content-between">
+                                        <span>12 Months</span>
+                                        <span class="badge bg-danger">20% OFF</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pricing-box text-center mb-4 p-3 bg-light rounded border border-primary">
+                    <div class="text-muted">Total Price</div>
+                    <h2 class="text-primary mb-0" id="totalPrice">$0.00</h2>
+                    <div id="discountText" class="text-success mt-1"></div>
+                    <div id="monthlyEquivalent" class="text-muted mt-1 small"></div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <img src="https://flutterwave.com/images/logo/full.svg" alt="Flutterwave" height="30">
+                        </div>
+                        <div>
+                            <strong>Secure Payment via Flutterwave</strong><br>
+                            Payment will be processed securely through Flutterwave's trusted payment gateway.
+                            <div class="mt-2">
+                                <img src="https://cdn.filestackcontent.com/mMo6YnhTRhifTRguLUOg" alt="Payment Methods" height="25" class="me-2">
+                                <img src="https://cdn.filestackcontent.com/ReOwF8SFSaCYjeQuvBQm" alt="Mobile Money" height="25">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-lg w-100 mt-2" id="confirmSubscription">
+                    <img src="https://flutterwave.com/images/logo/full-alt.svg" alt="Flutterwave" height="20" class="me-2">
+                    Pay Now with Flutterwave
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">Confirm Cancellation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel your subscription?</p>
+                <p>You will lose access to premium features at the end of your billing period.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Subscription</button>
+                <button type="button" class="btn btn-danger" id="confirmCancel">
+                    <i class="fas fa-times-circle me-2"></i>Yes, Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Variables
+    let selectedPlan = '';
+    let selectedPrice = 0;
+    let subscriptionId = 0;
+    let selectedDuration = 1;
+    
+    // Check for preselected plan from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const preselectedPlan = urlParams.get('plan');
+      // DOM Elements
+    const subscriptionModal = new bootstrap.Modal(document.getElementById('subscriptionModal'));
+    const cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
+    const planNameElement = document.getElementById('planName');
+    const basePriceElements = document.querySelectorAll('.base-price');
+    const durationRadios = document.querySelectorAll('input[name="duration"]');
+    const totalPriceElement = document.getElementById('totalPrice');
+    const discountTextElement = document.getElementById('discountText');
+    const monthlyEquivalentElement = document.getElementById('monthlyEquivalent');
+    const confirmSubscriptionBtn = document.getElementById('confirmSubscription');
+    const confirmCancelBtn = document.getElementById('confirmCancel');
+    const cancelSubscriptionBtn = document.getElementById('cancelSubscription');
+    
+    // Add styling for duration options
+    document.head.insertAdjacentHTML('beforeend', `
+        <style>
+            .duration-option .form-check-label {
+                cursor: pointer;
+                border: 1px solid #dee2e6;
+                transition: all 0.2s;
+            }
+            .duration-option .form-check-input {
+                position: absolute;
+                opacity: 0;
+            }
+            .duration-option .form-check-input:checked + .form-check-label {
+                background-color: #f8f9fa;
+                border-color: #0d6efd;
+                box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            }
+        </style>
+    `);
+      // Function to calculate the total price based on duration and plan
+    function calculateTotalPrice(basePrice, duration) {
+        let discount = 0;
+        let totalPrice = basePrice * duration;
+        
+        // Apply discounts based on duration
+        if (duration == 12) {
+            discount = 0.2; // 20% discount
+            totalPrice = totalPrice * 0.8;
+        } else if (duration == 9) {
+            discount = 0.15; // 15% discount
+            totalPrice = totalPrice * 0.85;
+        } else if (duration == 6) {
+            discount = 0.1; // 10% discount
+            totalPrice = totalPrice * 0.9;
+        } else if (duration == 3) {
+            discount = 0.05; // 5% discount
+            totalPrice = totalPrice * 0.95;
+        }
+        
+        return {
+            totalPrice,
+            discount,
+            discountAmount: basePrice * duration * discount,
+            monthlyEquivalent: totalPrice / duration
+        };
+    }
+    
+    // Function to update the pricing display
+    function updatePricing() {
+        let checkedDuration = 1;
+        durationRadios.forEach(radio => {
+            if (radio.checked) {
+                checkedDuration = parseInt(radio.value);
+            }
+        });
+        
+        selectedDuration = checkedDuration;
+        const { totalPrice, discount, discountAmount, monthlyEquivalent } = calculateTotalPrice(selectedPrice, selectedDuration);
+        
+        totalPriceElement.textContent = '$' + totalPrice.toFixed(2);
+        
+        if (discount > 0) {
+            discountTextElement.innerHTML = `<i class="fas fa-tags me-1"></i> You save $${discountAmount.toFixed(2)} (${discount * 100}% off)`;
+            monthlyEquivalentElement.textContent = `Only $${monthlyEquivalent.toFixed(2)}/month`;
+        } else {
+            discountTextElement.textContent = '';
+            monthlyEquivalentElement.textContent = '';
+        }
+    }
+      // Function to open subscription modal for a plan
+    function openSubscriptionModal(planId) {
+        // Find the button with the matching plan ID
+        const button = document.querySelector(`.subscribe-btn[data-plan="${planId}"]`);
+        if (!button) return;
+        
+        selectedPlan = planId;
+        selectedPrice = parseFloat(button.getAttribute('data-price'));
+        
+        // Update modal content
+        planNameElement.textContent = selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1);
+        basePriceElements.forEach(el => el.textContent = selectedPrice.toFixed(2));
+        
+        // Reset duration to 1 month
+        durationRadios.forEach(radio => {
+            if (radio.value === '1') {
+                radio.checked = true;
+            } else {
+                radio.checked = false;
+            }
+        });
+        selectedDuration = 1;
+        
+        // Update pricing
+        updatePricing();
+        
+        // Show modal
+        subscriptionModal.show();
+    }
+    
+    // Subscribe buttons
+    document.querySelectorAll('.subscribe-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            openSubscriptionModal(this.getAttribute('data-plan'));
+        });
+    });
+    
+    // Check for preselected plan
+    if (preselectedPlan && ['basic', 'standard', 'premium'].includes(preselectedPlan)) {
+        // Trigger the subscription modal with the preselected plan
+        setTimeout(() => openSubscriptionModal(preselectedPlan), 500);
+    }
+    
+    // Duration radio change
+    durationRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                selectedDuration = parseInt(this.value);
+                updatePricing();
+            }
+        });
+    });
+    
+    // Cancel subscription button
+    if (cancelSubscriptionBtn) {
+        cancelSubscriptionBtn.addEventListener('click', function() {
+            subscriptionId = this.getAttribute('data-subscription-id');
+            cancelModal.show();
+        });
+    }
+    
+    // Confirm subscription (initiates Flutterwave payment)
+    confirmSubscriptionBtn.addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        
+        fetch('/subscription/subscribe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                plan: selectedPlan,
+                duration: selectedDuration.toString()
+            })
+        })
+        .then(response => response.json())        .then(data => {
+            if (data.success) {
+                // Redirect to Flutterwave payment page
+                window.location.href = data.paymentLink;
+            } else {
+                alert('Error: ' + data.message);
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay with Flutterwave';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay with Flutterwave';
+        });
+    });
+    
+    // Confirm cancel
+    confirmCancelBtn.addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        
+        fetch(`/subscription/${subscriptionId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Hide modal and reload page
+                cancelModal.hide();
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-times-circle me-2"></i>Yes, Cancel';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-times-circle me-2"></i>Yes, Cancel';
+        });
+    });
+});
+</script>
+
+<%- include('partials/footer') %>

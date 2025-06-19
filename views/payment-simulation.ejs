@@ -1,0 +1,182 @@
+<%- include('partials/header', { pageTitle: 'Simulate Flutterwave Payment' }) %>
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <img src="https://flutterwave.com/images/logo/full.svg" alt="Flutterwave" height="50" class="mb-4">
+            <h1>Payment Simulation</h1>
+            <p class="lead">This is a simulation of the Flutterwave payment process for development purposes.</p>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Flutterwave Payment</h5>
+                        <img src="https://flutterwave.com/images/logo/full-alt.svg" alt="Flutterwave" height="30">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4 text-center p-3 bg-light rounded border">
+                        <h4><%= planName %> Plan</h4>
+                        <h2 class="text-primary">$<%= amount.toFixed(2) %></h2>
+                        <p>
+                            for <%= pendingSubscription.duration %> month<%= pendingSubscription.duration > 1 ? 's' : '' %> 
+                            <% if (pendingSubscription.duration > 1) { %>
+                                <span class="badge bg-success">
+                                    <% 
+                                        let discountPercent = 0;
+                                        switch(pendingSubscription.duration) {
+                                            case 12: discountPercent = 20; break;
+                                            case 9: discountPercent = 15; break;
+                                            case 6: discountPercent = 10; break;
+                                            case 3: discountPercent = 5; break;
+                                        }
+                                        if (discountPercent > 0) { 
+                                    %>
+                                        <%= discountPercent %>% discount applied
+                                    <% } %>
+                                </span>
+                            <% } %>
+                        </p>
+                        <div class="text-muted small">Transaction Reference: <%= txRef %></div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Payment Method</label>
+                        <div class="payment-methods">
+                            <div class="row mb-3">
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="paymentMethod" id="flutterwave" value="flutterwave" checked>
+                                    <label class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-2" for="flutterwave">
+                                        <i class="fas fa-bolt mb-2"></i>
+                                        Flutterwave
+                                    </label>
+                                </div>
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="paymentMethod" id="mobilemoney" value="mobilemoney">
+                                    <label class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-2" for="mobilemoney">
+                                        <i class="fas fa-mobile-alt mb-2"></i>
+                                        Mobile Money
+                                    </label>
+                                </div>
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="paymentMethod" id="ussd" value="ussd">
+                                    <label class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-2" for="ussd">
+                                        <i class="fas fa-phone mb-2"></i>
+                                        USSD
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="cardDetails" class="p-3 border rounded mb-4">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0 fw-bold">Card Information</label>
+                                <div>
+                                    <i class="fab fa-cc-visa text-primary me-1"></i>
+                                    <i class="fab fa-cc-mastercard text-danger me-1"></i>
+                                    <i class="fab fa-cc-amex text-info"></i>
+                                </div>
+                            </div>
+                            <input type="text" class="form-control form-control-lg mb-2" value="4242 4242 4242 4242" readonly>
+                            <div class="form-text">This is a test card number. No real charges will be made.</div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col">
+                                <div class="mb-3">
+                                    <label class="form-label">Expiry Date</label>
+                                    <input type="text" class="form-control" value="12/25" readonly>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="mb-3">
+                                    <label class="form-label">CVV</label>
+                                    <input type="text" class="form-control" value="123" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button id="successBtn" class="btn btn-success btn-lg">
+                            <img src="https://flutterwave.com/images/logo/full-alt.svg" alt="Flutterwave" height="20" class="me-2">
+                            Complete Payment
+                        </button>
+                        <button id="failureBtn" class="btn btn-outline-danger">
+                            <i class="fas fa-times-circle me-2"></i>Simulate Failed Payment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
+    const cardDetails = document.getElementById('cardDetails');
+    const successBtn = document.getElementById('successBtn');
+    const failureBtn = document.getElementById('failureBtn');
+    
+    // Toggle payment method details
+    paymentMethodRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'flutterwave') {
+                cardDetails.style.display = 'block';
+            } else {
+                cardDetails.style.display = 'none';
+            }
+        });
+    });
+    
+    // Handle successful payment
+    successBtn.addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        
+        completePayment('successful');
+    });
+    
+    // Handle failed payment
+    failureBtn.addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        
+        completePayment('failed');
+    });
+    
+    // Complete payment process
+    function completePayment(status) {
+        fetch('/subscription/confirm', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                txRef: '<%= txRef %>',
+                status: status === 'successful' ? 'successful' : 'failed'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/dashboard?success=subscribed';
+            } else {
+                window.location.href = '/subscription?error=payment_failed';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            window.location.href = '/subscription?error=payment_error';
+        });
+    }
+});
+</script>
+
+<%- include('partials/footer') %>

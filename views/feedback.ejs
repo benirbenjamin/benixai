@@ -1,0 +1,144 @@
+<%- include('partials/header') %>
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="mb-4">Share Your Feedback</h1>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0">Your Opinion Matters</h2>
+                </div>
+                <div class="card-body">
+                    <p>We're constantly working to improve BenixSpace AI and provide you with the best experience possible. Your feedback helps us identify what's working well and where we can make improvements.</p>
+                    
+                    <form id="feedbackForm" action="/feedback" method="POST">
+                        <div class="mb-4">
+                            <label class="form-label">How would you rate your overall experience with BenixSpace AI?</label>
+                            <div class="rating-stars mb-2" id="experienceRating">
+                                <i class="fas fa-star fa-2x" data-value="1"></i>
+                                <i class="fas fa-star fa-2x" data-value="2"></i>
+                                <i class="fas fa-star fa-2x" data-value="3"></i>
+                                <i class="fas fa-star fa-2x" data-value="4"></i>
+                                <i class="fas fa-star fa-2x" data-value="5"></i>
+                            </div>
+                            <input type="hidden" name="rating" id="ratingValue" value="0">
+                            <small class="text-muted" id="ratingText">Click to rate</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="feedbackType" class="form-label">What are you providing feedback on?</label>
+                            <select class="form-select" id="feedbackType" name="feedbackType" required>
+                                <option value="" selected disabled>Please select...</option>
+                                <option value="audio-recording">Audio Recording Experience</option>
+                                <option value="music-generation">Music Generation Quality</option>
+                                <option value="ui-ux">User Interface & Experience</option>
+                                <option value="pricing">Pricing & Subscription</option>
+                                <option value="feature-request">Feature Request</option>
+                                <option value="bug-report">Bug Report</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="feedbackTitle" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="feedbackTitle" name="feedbackTitle" placeholder="Brief description of your feedback" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="feedbackDetails" class="form-label">Details</label>
+                            <textarea class="form-control" id="feedbackDetails" name="feedbackDetails" rows="5" placeholder="Please provide specific details about your experience..." required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="feedbackSuggestions" class="form-label">Suggestions for Improvement</label>
+                            <textarea class="form-control" id="feedbackSuggestions" name="feedbackSuggestions" rows="3" placeholder="Do you have any suggestions on how we could improve?"></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="contactConsent" id="contactConsent">
+                                <label class="form-check-label" for="contactConsent">
+                                    I'm willing to be contacted about my feedback if needed
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <h4>Other Ways to Reach Us</h4>
+                <p>If you prefer to provide feedback through other channels, we're available at:</p>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <i class="fas fa-envelope fa-2x text-primary mb-2"></i>
+                        <p>benirabok@gmail.com</p>
+                    </div>
+                    <div class="col-md-4">
+                        <i class="fas fa-phone fa-2x text-primary mb-2"></i>
+                        <p>+250783987223</p>
+                    </div>
+                    <div class="col-md-4">
+                        <i class="fas fa-globe fa-2x text-primary mb-2"></i>
+                        <p>ai.benix.space</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rating-stars {
+        color: #e0e0e0;
+        cursor: pointer;
+    }
+    .rating-stars .fas {
+        margin-right: 5px;
+        transition: color 0.2s;
+    }
+    .rating-stars .fas:hover,
+    .rating-stars .fas.active {
+        color: #FFC107;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('#experienceRating .fas');
+        const ratingValue = document.getElementById('ratingValue');
+        const ratingText = document.getElementById('ratingText');
+        const ratingFeedback = [
+            'Click to rate',
+            'Poor - Needs significant improvement',
+            'Fair - Works but has issues',
+            'Good - Meets expectations',
+            'Very Good - Exceeds expectations',
+            'Excellent - Absolutely love it!'
+        ];
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const value = this.dataset.value;
+                ratingValue.value = value;
+                
+                // Update UI
+                stars.forEach(s => {
+                    s.classList.remove('active');
+                    if (s.dataset.value <= value) {
+                        s.classList.add('active');
+                    }
+                });
+                
+                ratingText.textContent = ratingFeedback[value];
+            });
+        });
+    });
+</script>
+
+<%- include('partials/footer') %>

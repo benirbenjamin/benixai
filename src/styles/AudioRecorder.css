@@ -1,0 +1,42 @@
+.audio-recorder {
+  padding: 20px;
+  border-radius: 8px;
+  background: #f5f5f5;
+}
+
+.status-indicator {
+  margin-bottom: 10px;
+  height: 20px;
+}
+
+.recording-indicator {
+  color: #dc3545;
+  animation: blink 1s infinite;
+}
+
+.record-button {
+  padding: 10px 20px;
+  border-radius: 4px;
+  border: none;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+.record-button.recording {
+  background: #dc3545;
+}
+
+.upload-button {
+  margin-left: 10px;
+  padding: 10px 20px;
+  border-radius: 4px;
+  border: none;
+  background: #28a745;
+  color: white;
+  cursor: pointer;
+}
+
+@keyframes blink {
+  50% { opacity: 0.5; }
+}

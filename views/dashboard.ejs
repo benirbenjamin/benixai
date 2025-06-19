@@ -1,0 +1,359 @@
+<%- include('partials/header', { pageTitle: 'Dashboard' }) %>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <h1>Welcome to Your Dashboard</h1>
+        <p class="lead">Manage your music generation and subscription from here.</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Subscription Status Card -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Your Subscription</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4><%= subscription.plan %></h4>
+                    <% if (subscription.active) { %>
+                        <span class="badge bg-success">Active</span>
+                    <% } else { %>
+                        <span class="badge bg-danger">Inactive</span>
+                    <% } %>
+                </div>
+
+                <% if (subscription.active) { %>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Expires On</span>
+                            <strong><%= new Date(subscription.expiry).toLocaleDateString() %></strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Songs Remaining Today</span>
+                            <strong>
+                                <% if (subscription.songsRemaining === Infinity) { %>
+                                    Unlimited
+                                <% } else { %>
+                                    <%= subscription.songsRemaining %> / <%= subscription.songsLimit %>
+                                <% } %>
+                            </strong>
+                        </li>
+                    </ul>
+
+                    <div class="mb-3">
+                        <h6>Available Features:</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="<%= subscription.features.vocal ? 'fas fa-check text-success' : 'fas fa-times text-danger' %> me-2"></i>
+                                    <span>AI Voice</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="<%= subscription.features.instrumental ? 'fas fa-check text-success' : 'fas fa-times text-danger' %> me-2"></i>
+                                    <span>Instrumental</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="<%= subscription.features.chorus ? 'fas fa-check text-success' : 'fas fa-times text-danger' %> me-2"></i>
+                                    <span>Chorus Harmonies</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="/record" class="btn btn-primary d-block">
+                        <i class="fas fa-microphone me-1"></i> Record or Upload Voice
+                    </a>
+                <% } else { %>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Your subscription has expired or is not active.
+                    </div>
+                    <a href="/subscription" class="btn btn-success d-block">
+                        <i class="fas fa-crown me-1"></i> Subscribe Now
+                    </a>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Card -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="d-grid">
+                            <a href="/record" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-microphone mb-2 d-block fs-3"></i>
+                                Record Voice
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-grid">
+                            <a href="/record?upload=true" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-upload mb-2 d-block fs-3"></i>
+                                Upload Audio
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-grid">
+                            <a href="/music-library" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-music mb-2 d-block fs-3"></i>
+                                My Music
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-grid">
+                            <a href="/subscription" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-credit-card mb-2 d-block fs-3"></i>
+                                Subscription
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Music -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Your Recent Music</h5>
+            </div>
+            <div class="card-body">
+                <% if (recentMusic && recentMusic.length > 0) { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Created</th>
+                                    <th>Structure</th>
+                                    <th>Instrumental</th>
+                                    <th>AI Vocals</th>
+                                    <th>Chorus</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% recentMusic.forEach(song => { %>
+                                    <tr>
+                                        <td><%= new Date(song.created_at).toLocaleDateString() %></td>
+                                        <td>
+                                            <%= song.song_structure %> 
+                                            (<%= song.num_verses %> verse<%= song.num_verses > 1 ? 's' : '' %>
+                                            <%= song.has_chorus ? '+ chorus' : '' %>
+                                            <%= song.has_bridge ? '+ bridge' : '' %>)
+                                        </td>
+                                        <td>
+                                            <% if (song.instrumental_path) { %>
+                                                <a href="/music/<%= song.instrumental_path %>" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-play"></i>
+                                                </a>
+                                            <% } else { %>
+                                                <span class="badge bg-light text-dark">None</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <% if (song.vocals_path) { %>
+                                                <a href="/music/<%= song.vocals_path %>" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-play"></i>
+                                                </a>
+                                            <% } else { %>
+                                                <span class="badge bg-light text-dark">None</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <% if (song.chorus_path) { %>
+                                                <a href="/music/<%= song.chorus_path %>" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-play"></i>
+                                                </a>
+                                            <% } else { %>
+                                                <span class="badge bg-light text-dark">None</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="/music/details/<%= song.id %>" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </a>
+                                                <a href="/music/download/<%= song.id %>" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="/music-library" class="btn btn-outline-primary">View All Music</a>
+                    </div>
+                <% } else { %>
+                    <div class="text-center py-5">
+                        <i class="fas fa-music fs-1 text-muted mb-3"></i>
+                        <h5>You haven't created any music yet</h5>
+                        <p class="text-muted">Head over to the Record page to create your first AI-powered song!</p>
+                        <a href="/record" class="btn btn-primary mt-2">
+                            <i class="fas fa-microphone me-1"></i> Record Now
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subscription Plans -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Subscription Plans</h5>
+                <a href="/subscription" class="btn btn-sm btn-light">Manage Subscription</a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Basic Plan -->
+                    <div class="col-md-4 mb-4 mb-md-0">
+                        <div class="card h-100 <%= subscription.plan === 'Basic' ? 'border-primary' : '' %>">
+                            <div class="card-header text-center <%= subscription.plan === 'Basic' ? 'bg-primary text-white' : '' %>">
+                                <h5 class="mb-0">Basic</h5>
+                                <% if (subscription.plan === 'Basic') { %>
+                                    <span class="badge bg-light text-primary">Current Plan</span>
+                                <% } %>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center mb-3">
+                                    <h3>$5<small class="text-muted">/month</small></h3>
+                                </div>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i>AI Voice Generation
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i>Instrumental Backing
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i>Chorus Harmonies (SATB)
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i><strong>2 songs per day</strong>
+                                    </li>
+                                </ul>
+                                <div class="d-grid">
+                                    <% if (subscription.plan !== 'Basic') { %>
+                                        <a href="/subscription/choose/basic" class="btn <%= subscription.plan === 'None' ? 'btn-primary' : 'btn-outline-primary' %>">
+                                            Select Plan
+                                        </a>
+                                    <% } else { %>
+                                        <button class="btn btn-success" disabled>Current Plan</button>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Standard Plan -->
+                    <div class="col-md-4 mb-4 mb-md-0">
+                        <div class="card h-100 <%= subscription.plan === 'Standard' ? 'border-primary' : '' %>">
+                            <div class="card-header text-center <%= subscription.plan === 'Standard' ? 'bg-primary text-white' : '' %>">
+                                <h5 class="mb-0">Standard</h5>
+                                <% if (subscription.plan === 'Standard') { %>
+                                    <span class="badge bg-light text-primary">Current Plan</span>
+                                <% } %>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center mb-3">
+                                    <h3>$10<small class="text-muted">/month</small></h3>
+                                </div>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i>AI Voice Generation
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i>Instrumental Backing
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i>Chorus Harmonies (SATB)
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i><strong>5 songs per day</strong>
+                                    </li>
+                                </ul>
+                                <div class="d-grid">
+                                    <% if (subscription.plan !== 'Standard') { %>
+                                        <a href="/subscription/choose/standard" class="btn btn-outline-primary">
+                                            Select Plan
+                                        </a>
+                                    <% } else { %>
+                                        <button class="btn btn-success" disabled>Current Plan</button>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Premium Plan -->
+                    <div class="col-md-4">
+                        <div class="card h-100 <%= subscription.plan === 'Premium' ? 'border-primary' : '' %>">
+                            <div class="card-header text-center <%= subscription.plan === 'Premium' ? 'bg-primary text-white' : 'bg-dark text-white' %>">
+                                <h5 class="mb-0">Premium</h5>
+                                <% if (subscription.plan === 'Premium') { %>
+                                    <span class="badge bg-light text-primary">Current Plan</span>
+                                <% } else { %>
+                                    <span class="badge bg-warning text-dark">Best Value</span>
+                                <% } %>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center mb-3">
+                                    <h3>$20<small class="text-muted">/month</small></h3>
+                                </div>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i>AI Voice Generation
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i>Instrumental Backing
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i>Chorus Harmonies (SATB)
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success me-2"></i><strong>Unlimited songs</strong>
+                                    </li>
+                                </ul>
+                                <div class="d-grid">
+                                    <% if (subscription.plan !== 'Premium') { %>
+                                        <a href="/subscription/choose/premium" class="btn <%= subscription.plan === 'None' ? 'btn-dark' : 'btn-outline-dark' %>">
+                                            Select Plan
+                                        </a>
+                                    <% } else { %>
+                                        <button class="btn btn-success" disabled>Current Plan</button>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

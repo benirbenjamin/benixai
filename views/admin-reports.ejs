@@ -1,0 +1,245 @@
+<%- include('partials/header', { title: title || 'System Reports' }) %>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">System Reports</h1>
+        <div>
+            <a href="/admin" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Date Range Selector -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form id="dateRangeForm" class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="startDate" name="startDate">
+                </div>
+                <div class="col-md-4">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="endDate" name="endDate">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <div class="d-grid gap-2 w-100">
+                        <button type="submit" class="btn btn-primary">Apply Filter</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Music Generations Chart -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Music Generations</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="generationsChart" width="400" height="200"></canvas>
+        </div>
+        <div class="card-footer">
+            <div class="row text-center">
+                <div class="col">
+                    <h6 class="mb-0">Total Generations</h6>
+                    <div class="h4 mt-2"><%= totalGenerations %></div>
+                </div>
+                <div class="col">
+                    <h6 class="mb-0">Average Per Day</h6>
+                    <div class="h4 mt-2"><%= Math.round(totalGenerations / (JSON.parse(chartLabels).length || 1)) %></div>
+                </div>
+                <div class="col">
+                    <h6 class="mb-0">Peak Day</h6>
+                    <div class="h4 mt-2" id="peakDay">--</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Stats -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Subscription Activity</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">New Subscriptions</h5>
+                            <canvas id="subscriptionChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Subscription Distribution</h5>
+                            <canvas id="planDistributionChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default dates (last 30 days)
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        document.getElementById('startDate').value = formatDate(thirtyDaysAgo);
+        document.getElementById('endDate').value = formatDate(today);
+
+        // Parse chart data from server
+        const labels = <%= chartLabels %>;
+        const data = <%= chartData %>;
+        
+        // Find peak day
+        let peakValue = 0;
+        let peakIndex = -1;
+        
+        data.forEach((value, index) => {
+            if (value > peakValue) {
+                peakValue = value;
+                peakIndex = index;
+            }
+        });
+        
+        if (peakIndex >= 0) {
+            const peakDate = new Date(labels[peakIndex]);
+            document.getElementById('peakDay').textContent = 
+                `${peakDate.toLocaleDateString()} (${peakValue})`;
+        }
+        
+        // Music generations chart
+        const generationsCtx = document.getElementById('generationsChart').getContext('2d');
+        const generationsChart = new Chart(generationsCtx, {
+            type: 'line',
+            data: {
+                labels: labels.map(date => new Date(date).toLocaleDateString()),
+                datasets: [{
+                    label: 'Music Generations',
+                    data: data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        // Sample subscription data
+        const subscriptionData = {
+            labels: labels.slice(-7).map(date => new Date(date).toLocaleDateString()),
+            datasets: [{
+                label: 'New Subscriptions',
+                data: [3, 5, 2, 7, 4, 6, 8],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        };
+        
+        const subscriptionCtx = document.getElementById('subscriptionChart').getContext('2d');
+        const subscriptionChart = new Chart(subscriptionCtx, {
+            type: 'bar',
+            data: subscriptionData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        // Plan distribution chart
+        const planDistributionData = {
+            labels: ['Basic', 'Standard', 'Premium', 'Free Trial'],
+            datasets: [{
+                data: [15, 25, 40, 20],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.5)',
+                    'rgba(54, 162, 235, 0.5)',
+                    'rgba(255, 206, 86, 0.5)',
+                    'rgba(75, 192, 192, 0.5)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+        
+        const planDistributionCtx = document.getElementById('planDistributionChart').getContext('2d');
+        const planDistributionChart = new Chart(planDistributionCtx, {
+            type: 'doughnut',
+            data: planDistributionData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+        // Date range form
+        document.getElementById('dateRangeForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            // Redirect with date parameters
+            window.location.href = `/admin/reports?startDate=${startDate}&endDate=${endDate}`;
+        });
+    });
+    
+    // Helper function to format date as YYYY-MM-DD
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+</script>
+
+<%- include('partials/footer') %>

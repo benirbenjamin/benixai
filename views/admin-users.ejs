@@ -1,0 +1,308 @@
+<%- include('partials/header', { title: title || 'User Management' }) %>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">User Management</h1>
+        <div>
+            <a href="/admin" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">All Users</h5>
+            <div>
+                <input type="text" id="userSearch" class="form-control form-control-sm" placeholder="Search users...">
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Join Date</th>
+                            <th>Subscription</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(user => { %>
+                            <tr>
+                                <td><%= user.id %></td>
+                                <td><%= user.email %></td>
+                                <td><span class="badge <%= user.role === 'admin' ? 'bg-danger' : 'bg-secondary' %>">
+                                    <%= user.role.toUpperCase() %>
+                                </span></td>
+                                <td><%= new Date(user.created_at).toLocaleDateString() %></td>
+                                <td>
+                                    <% if (user.subscription) { %>
+                                        <%= user.subscription.plan.charAt(0).toUpperCase() + user.subscription.plan.slice(1) %>
+                                    <% } else { %>
+                                        <span class="text-muted">No subscription</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (user.subscription) { %>
+                                        <% 
+                                           const expiryDate = new Date(user.subscription.expires_at);
+                                           const now = new Date();
+                                           const isActive = expiryDate > now;
+                                        %>
+                                        <span class="badge <%= isActive ? 'bg-success' : 'bg-warning' %>">
+                                            <%= isActive ? 'Active' : 'Expired' %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="badge bg-secondary">Free</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-outline-primary" 
+                                                data-bs-toggle="modal" data-bs-target="#userModal" 
+                                                data-user-id="<%= user.id %>">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                data-user-id="<%= user.id %>" data-user-email="<%= user.email %>">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><%= users.length %> users found</span>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Edit Modal -->
+<div class="modal fade" id="userModal" tabindex="-1" role="dialog" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="userId" name="userId">
+                    
+                    <div class="mb-3">
+                        <label for="userEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="userEmail" name="email" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="userRole" class="form-label">Role</label>
+                        <select class="form-select" id="userRole" name="role">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="subscriptionPlan" class="form-label">Subscription Plan</label>
+                        <select class="form-select" id="subscriptionPlan" name="plan">
+                            <option value="none">No Subscription</option>
+                            <option value="trial">Free Trial</option>
+                            <option value="basic">Basic</option>
+                            <option value="standard">Standard</option>
+                            <option value="premium">Premium</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="subscriptionExpiry" class="form-label">Expiry Date</label>
+                        <input type="date" class="form-control" id="subscriptionExpiry" name="expiryDate">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveUserBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the user <strong id="deleteUserEmail"></strong>?</p>
+                <p class="text-danger">This action cannot be undone and will remove all associated data including subscriptions and music generations.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete User</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // User search functionality
+        const searchInput = document.getElementById('userSearch');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+                const tableRows = document.querySelectorAll('tbody tr');
+                
+                tableRows.forEach(row => {
+                    const email = row.cells[1].textContent.toLowerCase();
+                    if (email.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // User edit modal
+        const userModal = document.getElementById('userModal');
+        if (userModal) {
+            userModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const userId = button.getAttribute('data-user-id');
+                
+                // Fetch user data from API
+                fetch(`/admin/api/users/${userId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const user = data.user;
+                            document.getElementById('userId').value = user.id;
+                            document.getElementById('userEmail').value = user.email;
+                            document.getElementById('userRole').value = user.role;
+                            
+                            // Set subscription details if available
+                            if (data.subscription) {
+                                document.getElementById('subscriptionPlan').value = data.subscription.plan;
+                                
+                                // Format date for input: YYYY-MM-DD
+                                const expiryDate = new Date(data.subscription.expires_at);
+                                const formattedDate = expiryDate.toISOString().split('T')[0];
+                                document.getElementById('subscriptionExpiry').value = formattedDate;
+                            } else {
+                                document.getElementById('subscriptionPlan').value = 'none';
+                                document.getElementById('subscriptionExpiry').value = '';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching user details:', error);
+                        alert('Failed to load user details. Please try again.');
+                    });
+            });
+            
+            // Save user changes
+            const saveButton = document.getElementById('saveUserBtn');
+            if (saveButton) {
+                saveButton.addEventListener('click', function() {
+                    const userId = document.getElementById('userId').value;
+                    const plan = document.getElementById('subscriptionPlan').value;
+                    const expiryDate = document.getElementById('subscriptionExpiry').value;
+                    
+                    // Update subscription
+                    fetch(`/admin/api/users/${userId}/subscription`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            planType: plan,
+                            expiryDate: expiryDate
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('User updated successfully!');
+                            window.location.reload();
+                        } else {
+                            alert('Failed to update user: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating user:', error);
+                        alert('An error occurred while updating the user.');
+                    });
+                });
+            }
+        }
+        
+        // Delete user modal
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const userId = button.getAttribute('data-user-id');
+                const userEmail = button.getAttribute('data-user-email');
+                
+                document.getElementById('deleteUserEmail').textContent = userEmail;
+                
+                const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+                confirmDeleteBtn.setAttribute('data-user-id', userId);
+            });
+            
+            // Confirm delete button
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            if (confirmDeleteBtn) {
+                confirmDeleteBtn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    
+                    // This would be implemented if we had a delete user API endpoint
+                    alert('User deletion is not implemented in this demo.');
+                    
+                    // In a real implementation:
+                    /*
+                    fetch(`/admin/api/users/${userId}`, {
+                        method: 'DELETE'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('User deleted successfully!');
+                            window.location.reload();
+                        } else {
+                            alert('Failed to delete user: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting user:', error);
+                        alert('An error occurred while deleting the user.');
+                    });
+                    */
+                });
+            }
+        }
+    });
+</script>
+
+<%- include('partials/footer') %>

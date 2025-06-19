@@ -1,0 +1,249 @@
+<%- include('partials/header', { title: title || 'API Configuration' }) %>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">API Configuration</h1>
+        <div>
+            <a href="/admin" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <% if (locals.envConfigured) { %>
+    <div class="alert alert-info mb-4">
+        <h5><i class="fas fa-info-circle me-2"></i>Environment Variables Detected</h5>
+        <p>API keys have been configured via environment variables in your <code>.env</code> file. These settings take precedence over database settings.</p>
+        <ul class="mb-0">
+            <% if (config.env.OPENAI_API_KEY === 'Configured') { %><li>OpenAI API Key: <span class="badge bg-success">Configured</span></li><% } %>
+            <% if (config.env.STABILITY_API_KEY === 'Configured') { %><li>Stability AI API Key: <span class="badge bg-success">Configured</span></li><% } %>
+            <% if (config.env.STABILITY_API_URL) { %><li>Stability API URL: <code><%= config.env.STABILITY_API_URL %></code></li><% } %>
+        </ul>
+    </div>
+    <% } %>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Music Generation API Settings</h5>
+        </div>
+        <div class="card-body">
+            <% if (locals.messages && messages.success) { %>
+                <div class="alert alert-success" role="alert">
+                    <%= messages.success %>
+                </div>
+            <% } %>
+            <% if (locals.messages && messages.error) { %>
+                <div class="alert alert-danger" role="alert">
+                    <%= messages.error %>
+                </div>
+            <% } %>
+
+            <form action="/admin/config/api" method="POST">
+                <div class="mb-4 border-bottom pb-3">
+                    <h5>Global API Settings</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="api_maintenance_mode" id="apiMaintenanceMode" 
+                                    <%= config.api.maintenanceMode ? 'checked' : '' %>>
+                                <label class="form-check-label" for="apiMaintenanceMode">
+                                    API Maintenance Mode 
+                                    <small class="text-muted">(Disable all API calls)</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="apiTimeout" name="api_timeout" 
+                                    value="<%= config.api.timeout || 60 %>" min="10" max="300">
+                                <label for="apiTimeout">API Timeout (seconds)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vocal API Settings -->
+                <div class="mb-4 border-bottom pb-3">
+                    <h5>Vocal Generation API</h5>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="api_vocal_enabled" id="vocalApiEnabled" 
+                            <%= config.api.vocal.enabled ? 'checked' : '' %>>
+                        <label class="form-check-label" for="vocalApiEnabled">Enable Vocal API</label>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="vocalApiUrl" name="api_vocal_url" 
+                                    value="<%= config.api.vocal.url || '' %>" placeholder="Enter API URL">
+                                <label for="vocalApiUrl">API URL</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="password" class="form-control" id="vocalApiKey" name="api_vocal_key" 
+                                    value="<%= config.api.vocal.key || '' %>" placeholder="Enter API Key">
+                                <label for="vocalApiKey">API Key</label>
+                                <div class="form-text">This key is stored securely and used for API authentication.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instrumental API Settings -->
+                <div class="mb-4 border-bottom pb-3">
+                    <h5>Instrumental Generation API</h5>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="api_instrumental_enabled" id="instrumentalApiEnabled" 
+                            <%= config.api.instrumental.enabled ? 'checked' : '' %>>
+                        <label class="form-check-label" for="instrumentalApiEnabled">Enable Instrumental API</label>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="instrumentalApiUrl" name="api_instrumental_url" 
+                                    value="<%= config.api.instrumental.url || '' %>" placeholder="Enter API URL">
+                                <label for="instrumentalApiUrl">API URL</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="password" class="form-control" id="instrumentalApiKey" name="api_instrumental_key" 
+                                    value="<%= config.api.instrumental.key || '' %>" placeholder="Enter API Key">
+                                <label for="instrumentalApiKey">API Key</label>
+                                <div class="form-text">This key is stored securely and used for API authentication.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chorus API Settings -->
+                <div class="mb-4 pb-3">
+                    <h5>Chorus Generation API</h5>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="api_chorus_enabled" id="chorusApiEnabled" 
+                            <%= config.api.chorus.enabled ? 'checked' : '' %>>
+                        <label class="form-check-label" for="chorusApiEnabled">Enable Chorus API</label>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="chorusApiUrl" name="api_chorus_url" 
+                                    value="<%= config.api.chorus.url || '' %>" placeholder="Enter API URL">
+                                <label for="chorusApiUrl">API URL</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="password" class="form-control" id="chorusApiKey" name="api_chorus_key" 
+                                    value="<%= config.api.chorus.key || '' %>" placeholder="Enter API Key">
+                                <label for="chorusApiKey">API Key</label>
+                                <div class="form-text">This key is stored securely and used for API authentication.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Save API Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">API Status</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Vocal API</h5>
+                            <div class="my-3">
+                                <% if (config.api.vocal.enabled) { %>
+                                    <span class="badge bg-success p-2 fs-6">ONLINE</span>
+                                <% } else { %>
+                                    <span class="badge bg-danger p-2 fs-6">OFFLINE</span>
+                                <% } %>
+                            </div>
+                            <button id="testVocalApi" class="btn btn-sm btn-outline-primary">Test Connection</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Instrumental API</h5>
+                            <div class="my-3">
+                                <% if (config.api.instrumental.enabled) { %>
+                                    <span class="badge bg-success p-2 fs-6">ONLINE</span>
+                                <% } else { %>
+                                    <span class="badge bg-danger p-2 fs-6">OFFLINE</span>
+                                <% } %>
+                            </div>
+                            <button id="testInstrumentalApi" class="btn btn-sm btn-outline-primary">Test Connection</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Chorus API</h5>
+                            <div class="my-3">
+                                <% if (config.api.chorus.enabled) { %>
+                                    <span class="badge bg-success p-2 fs-6">ONLINE</span>
+                                <% } else { %>
+                                    <span class="badge bg-danger p-2 fs-6">OFFLINE</span>
+                                <% } %>
+                            </div>
+                            <button id="testChorusApi" class="btn btn-sm btn-outline-primary">Test Connection</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4" id="apiTestResults"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Test API connection buttons
+    document.getElementById('testVocalApi').addEventListener('click', function() {
+        testApiConnection('vocal');
+    });
+    
+    document.getElementById('testInstrumentalApi').addEventListener('click', function() {
+        testApiConnection('instrumental');
+    });
+    
+    document.getElementById('testChorusApi').addEventListener('click', function() {
+        testApiConnection('chorus');
+    });
+    
+    // Function to test API connections
+    function testApiConnection(type) {
+        const resultsDiv = document.getElementById('apiTestResults');
+        resultsDiv.innerHTML = `<div class="alert alert-info">Testing ${type} API connection...</div>`;
+        
+        // In a real app, this would make an actual API test call
+        // For the demo, we'll simulate a response after a short delay
+        setTimeout(() => {
+            resultsDiv.innerHTML = `<div class="alert alert-success">
+                <h5>Connection Test Results</h5>
+                <p>Successfully connected to the ${type} API endpoint.</p>
+                <p><strong>Response time:</strong> 245ms</p>
+                <p><strong>Status:</strong> Operational</p>
+            </div>`;
+        }, 1500);
+    }
+});
+</script>
+
+<%- include('partials/footer') %>

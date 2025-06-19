@@ -1,0 +1,397 @@
+<%- include('partials/header', { title: title || 'Subscription Plans Configuration' }) %>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Subscription Plans Configuration</h1>
+        <div>
+            <a href="/admin" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Subscription Plans</h5>
+                </div>
+                <div class="card-body">
+                    <form action="/admin/config/plans" method="POST">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Price</th>
+                                    <th class="text-center">Daily Song Limit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Basic</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" name="basic_price" 
+                                                value="<%= config?.plan_prices?.basic || 5 %>" min="0" step="0.01">
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="number" class="form-control form-control-sm" name="basic_limit" 
+                                            value="<%= config?.song_limits?.basic || 2 %>" min="1" max="100">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Standard</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" name="standard_price" 
+                                                value="<%= config?.plan_prices?.standard || 10 %>" min="0" step="0.01">
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="number" class="form-control form-control-sm" name="standard_limit" 
+                                            value="<%= config?.song_limits?.standard || 5 %>" min="1" max="100">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Premium</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" name="premium_price" 
+                                                value="<%= config?.plan_prices?.premium || 20 %>" min="0" step="0.01">
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="number" class="form-control form-control-sm" name="premium_limit" 
+                                            value="<%= config?.song_limits?.premium || 999 %>" min="1" max="999">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Plan Configuration
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Free Trial Settings</h5>
+                </div>
+                <div class="card-body">
+                    <form action="/admin/config/trial" method="POST" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="trial_days" class="form-label">Trial Duration (Days)</label>
+                            <input type="number" class="form-control" id="trial_days" name="trial_days"
+                                value="<%= config?.free_trial_days || 14 %>" min="1" max="30">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="trial_limit" class="form-label">Daily Song Limit</label>
+                            <input type="number" class="form-control" id="trial_limit" name="trial_limit"
+                                value="<%= config?.song_limits?.trial || 2 %>" min="1" max="10">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="trial_enabled" name="trial_enabled"
+                                    <%= config?.trial_enabled ? 'checked' : '' %>>
+                                <label class="form-check-label" for="trial_enabled">Enable Free Trial</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Save Trial Settings
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Subscription Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Active Basic Plans</span>
+                            <strong>15</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Active Standard Plans</span>
+                            <strong>25</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Active Premium Plans</span>
+                            <strong>10</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Active Free Trials</span>
+                            <strong>5</strong>
+                        </li>
+                    </ul>
+                    
+                    <h6 class="mb-3">Monthly Revenue</h6>
+                    <div class="text-center mb-3">
+                        <div class="h2 text-success">$750.00</div>
+                        <div class="text-muted small">Estimated monthly recurring revenue</div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#revenueModal">
+                            <i class="fas fa-chart-line me-1"></i>View Revenue Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Discount Codes</h5>
+                </div>
+                <div class="card-body">
+                    <p>Manage discount codes for special promotions.</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#discountModal">
+                            <i class="fas fa-tags me-1"></i>Manage Discount Codes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Modal -->
+<div class="modal fade" id="revenueModal" tabindex="-1" role="dialog" aria-labelledby="revenueModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="revenueModalLabel">Revenue Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <canvas id="revenueChart" width="400" height="200"></canvas>
+                </div>
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Plan</th>
+                            <th>Subscribers</th>
+                            <th>Monthly Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Basic ($5/month)</td>
+                            <td>15</td>
+                            <td>$75.00</td>
+                        </tr>
+                        <tr>
+                            <td>Standard ($10/month)</td>
+                            <td>25</td>
+                            <td>$250.00</td>
+                        </tr>
+                        <tr>
+                            <td>Premium ($20/month)</td>
+                            <td>10</td>
+                            <td>$200.00</td>
+                        </tr>
+                        <tr>
+                            <td>Annual Memberships</td>
+                            <td>5</td>
+                            <td>$225.00</td>
+                        </tr>
+                        <tr class="table-success">
+                            <td colspan="2"><strong>Total Monthly Recurring Revenue</strong></td>
+                            <td><strong>$750.00</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-download me-1"></i>Download Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Discount Codes Modal -->
+<div class="modal fade" id="discountModal" tabindex="-1" role="dialog" aria-labelledby="discountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="discountModalLabel">Manage Discount Codes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newDiscountForm" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="discountCode" class="form-label">Discount Code</label>
+                            <input type="text" class="form-control" id="discountCode" name="discountCode" placeholder="e.g. SUMMER20">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="discountType" class="form-label">Type</label>
+                            <select class="form-select" id="discountType" name="discountType">
+                                <option value="percentage">Percentage</option>
+                                <option value="fixed">Fixed Amount</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="discountValue" class="form-label">Value</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="discountValue" name="discountValue" min="1" max="100">
+                                <span class="input-group-text" id="discountUnit">%</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" name="startDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate" name="endDate">
+                        </div>
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Add Discount Code
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Discount</th>
+                            <th>Valid Until</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SUMMER20</td>
+                            <td>20%</td>
+                            <td>2025-08-31</td>
+                            <td><span class="badge bg-success">Active</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>WELCOME10</td>
+                            <td>10%</td>
+                            <td>2025-12-31</td>
+                            <td><span class="badge bg-success">Active</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>SPRING15</td>
+                            <td>15%</td>
+                            <td>2025-04-30</td>
+                            <td><span class="badge bg-secondary">Expired</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Discount type toggle
+        document.getElementById('discountType').addEventListener('change', function() {
+            const discountUnit = document.getElementById('discountUnit');
+            if (this.value === 'percentage') {
+                discountUnit.textContent = '%';
+            } else {
+                discountUnit.textContent = '$';
+            }
+        });
+        
+        // Revenue chart
+        const revenueModal = document.getElementById('revenueModal');
+        if (revenueModal) {
+            revenueModal.addEventListener('shown.bs.modal', function() {
+                const revenueChart = new Chart(
+                    document.getElementById('revenueChart').getContext('2d'),
+                    {
+                        type: 'bar',
+                        data: {
+                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                            datasets: [{
+                                label: 'Monthly Revenue',
+                                data: [450, 520, 610, 690, 720, 750],
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '$' + value;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                );
+            });
+        }
+        
+        // New discount form
+        const newDiscountForm = document.getElementById('newDiscountForm');
+        if (newDiscountForm) {
+            newDiscountForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                alert('Discount code added successfully!');
+                
+                // Clear form
+                this.reset();
+            });
+        }
+    });
+</script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,374 @@
+<%- include('partials/header', { pageTitle: 'Admin Panel' }) %>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1>Admin Panel</h1>
+        <p class="lead">Manage subscription plans, features, and system settings.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <!-- Plan Configuration Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Subscription Plans</h5>
+            </div>
+            <div class="card-body">
+                <form id="planConfigForm" action="/admin/config/plans" method="POST">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Price ($)</th>
+                                    <th colspan="3">Features</th>
+                                    <th>Daily Songs</th>
+                                </tr>
+                                <tr class="text-center">
+                                    <td></td>
+                                    <td></td>
+                                    <td><small>Vocal</small></td>
+                                    <td><small>Instrumental</small></td>
+                                    <td><small>Chorus</small></td>
+                                    <td></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Basic</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" name="basic_price" 
+                                                value="<%= config.prices.basic || 5 %>" min="0" step="0.01">
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" name="basic_vocal" 
+                                                <%= config.features.basic?.vocal ? 'checked' : '' %>>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" name="basic_instrumental" 
+                                                <%= config.features.basic?.instrumental ? 'checked' : '' %>>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" name="basic_chorus" 
+                                                <%= config.features.basic?.chorus ? 'checked' : '' %>>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm" name="basic_limit" 
+                                            value="<%= config.limits.basic || 2 %>" min="1" max="100">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Standard</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" name="standard_price" 
+                                                value="<%= config.prices.standard || 10 %>" min="0" step="0.01">
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" name="standard_vocal" 
+                                                <%= config.features.standard?.vocal ? 'checked' : '' %>>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" name="standard_instrumental" 
+                                                <%= config.features.standard?.instrumental ? 'checked' : '' %>>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" name="standard_chorus" 
+                                                <%= config.features.standard?.chorus ? 'checked' : '' %>>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm" name="standard_limit" 
+                                            value="<%= config.limits.standard || 5 %>" min="1" max="100">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Premium</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" name="premium_price" 
+                                                value="<%= config.prices.premium || 20 %>" min="0" step="0.01">
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" name="premium_vocal" 
+                                                <%= config.features.premium?.vocal ? 'checked' : '' %>>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" name="premium_instrumental" 
+                                                <%= config.features.premium?.instrumental ? 'checked' : '' %>>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" name="premium_chorus" 
+                                                <%= config.features.premium?.chorus ? 'checked' : '' %>>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <select class="form-select" name="premium_limit">
+                                                <option value="unlimited" <%= config.limits.premium === 'unlimited' ? 'selected' : '' %>>Unlimited</option>
+                                                <% for(let i = 5; i <= 50; i += 5) { %>
+                                                    <option value="<%= i %>" <%= config.limits.premium == i ? 'selected' : '' %>><%= i %></option>
+                                                <% } %>
+                                            </select>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Plan Configuration
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- API Controls Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">API Controls</h5>
+            </div>
+            <div class="card-body">
+                <form id="apiConfigForm" action="/admin/config/api" method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label d-block">Vocal AI API</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="api_vocal_enabled" id="api_vocal_enabled"
+                                        <%= config.api.vocal.enabled ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="api_vocal_enabled">Enabled</label>
+                                </div>
+                                <div class="form-text">Toggle the AI vocal synthesis API</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="api_vocal_url" class="form-label">API URL</label>
+                                <input type="url" class="form-control" id="api_vocal_url" name="api_vocal_url"
+                                    value="<%= config.api.vocal.url %>">
+                            </div>
+                            <div class="mb-3">
+                                <label for="api_vocal_key" class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="api_vocal_key" name="api_vocal_key"
+                                    value="<%= config.api.vocal.key %>" autocomplete="new-password">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label d-block">Instrumental API</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="api_instrumental_enabled" id="api_instrumental_enabled"
+                                        <%= config.api.instrumental.enabled ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="api_instrumental_enabled">Enabled</label>
+                                </div>
+                                <div class="form-text">Toggle the AI instrumental generation API</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="api_instrumental_url" class="form-label">API URL</label>
+                                <input type="url" class="form-control" id="api_instrumental_url" name="api_instrumental_url"
+                                    value="<%= config.api.instrumental.url %>">
+                            </div>
+                            <div class="mb-3">
+                                <label for="api_instrumental_key" class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="api_instrumental_key" name="api_instrumental_key"
+                                    value="<%= config.api.instrumental.key %>" autocomplete="new-password">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label d-block">Chorus API</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="api_chorus_enabled" id="api_chorus_enabled"
+                                        <%= config.api.chorus.enabled ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="api_chorus_enabled">Enabled</label>
+                                </div>
+                                <div class="form-text">Toggle the AI chorus harmonies API</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="api_chorus_url" class="form-label">API URL</label>
+                                <input type="url" class="form-control" id="api_chorus_url" name="api_chorus_url"
+                                    value="<%= config.api.chorus.url %>">
+                            </div>
+                            <div class="mb-3">
+                                <label for="api_chorus_key" class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="api_chorus_key" name="api_chorus_key"
+                                    value="<%= config.api.chorus.key %>" autocomplete="new-password">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Global API Settings</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="api_maintenance_mode" id="api_maintenance_mode"
+                                        <%= config.api.maintenanceMode ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="api_maintenance_mode">
+                                        Maintenance Mode (Disable all APIs)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="api_timeout" class="form-label">API Timeout (seconds)</label>
+                                <input type="number" class="form-control" id="api_timeout" name="api_timeout"
+                                    value="<%= config.api.timeout || 60 %>" min="10" max="300">
+                                <div class="form-text">Maximum time to wait for API responses</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save API Configuration
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- System Stats Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">System Statistics</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Total Users</span>
+                        <strong><%= stats.totalUsers %></strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Active Subscriptions</span>
+                        <strong><%= stats.activeSubscriptions %></strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Songs Generated Today</span>
+                        <strong><%= stats.songsToday %></strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Total Revenue</span>
+                        <strong>$<%= stats.totalRevenue.toFixed(2) %></strong>
+                    </li>
+                </ul>
+                
+                <h6 class="mb-2">Subscription Distribution</h6>
+                <div class="mb-3">
+                    <div class="progress mb-2" style="height: 25px;">
+                        <div class="progress-bar" role="progressbar" style="width: <%= stats.planDistribution.basic %>%;" aria-valuenow="<%= stats.planDistribution.basic %>" aria-valuemin="0" aria-valuemax="100">
+                            Basic
+                        </div>
+                        <div class="progress-bar bg-info" role="progressbar" style="width: <%= stats.planDistribution.standard %>%;" aria-valuenow="<%= stats.planDistribution.standard %>" aria-valuemin="0" aria-valuemax="100">
+                            Standard
+                        </div>
+                        <div class="progress-bar bg-success" role="progressbar" style="width: <%= stats.planDistribution.premium %>%;" aria-valuenow="<%= stats.planDistribution.premium %>" aria-valuemin="0" aria-valuemax="100">
+                            Premium
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <small class="d-block">Basic</small>
+                            <strong><%= stats.planCounts.basic %></strong>
+                        </div>
+                        <div class="col-4">
+                            <small class="d-block">Standard</small>
+                            <strong><%= stats.planCounts.standard %></strong>
+                        </div>
+                        <div class="col-4">
+                            <small class="d-block">Premium</small>
+                            <strong><%= stats.planCounts.premium %></strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="/admin/reports" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-line me-1"></i>View Detailed Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/admin/users" class="btn btn-outline-primary">
+                        <i class="fas fa-users me-1"></i>Manage Users
+                    </a>
+                    <a href="/admin/payments" class="btn btn-outline-primary">
+                        <i class="fas fa-money-bill-wave me-1"></i>View Payments
+                    </a>
+                    <a href="/admin/logs" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-1"></i>View System Logs
+                    </a>
+                    <button id="clearCacheBtn" class="btn btn-outline-warning">
+                        <i class="fas fa-trash me-1"></i>Clear System Cache
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Messages Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">System Messages</h5>
+            </div>
+            <div class="card-body">
+                <form id="messageForm" action="/admin/config/messages" method="POST">
+                    <div class="mb-3">
+                        <label for="homeMessage" class="form-label">Home Page Message</label>
+                        <textarea class="form-control" id="homeMessage" name="homeMessage" rows="2"><%= config.messages?.home || '' %></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dashboardMessage" class="form-label">Dashboard Message</label>
+                        <textarea class="form-control" id="dashboardMessage" name="dashboardMessage" rows="2"><%= config.messages?.dashboard || '' %></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="showMessages" id="showMessages" 
+                                <%= config.messages?.enabled ? 'checked' : '' %>>
+                            <label class="form-check-label" for="showMessages">Show Messages</label>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Messages
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer', { pageJs: 'admin' }) %>

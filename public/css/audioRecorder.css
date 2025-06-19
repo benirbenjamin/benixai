@@ -1,0 +1,167 @@
+.recorder-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#visualizer {
+    width: 100%;
+    height: 120px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+#recordButton {
+    padding: 12px 24px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#recordButton:hover {
+    background-color: #45a049;
+}
+
+#recordButton.recording {
+    background-color: #f44336;
+}
+
+#recordButton.recording:hover {
+    background-color: #d32f2f;
+}
+
+#audioStatus, #uploadStatus {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+#audioStatus {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+#uploadStatus {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+#audioPlayer {
+    width: 100%;
+    margin: 15px 0;
+    display: none;
+}
+
+.uploaded-files {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.file-item {
+    padding: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.file-item a {
+    color: #1976d2;
+    text-decoration: none;
+}
+
+.file-item a:hover {
+    text-decoration: underline;
+}
+
+.progress-indicator {
+    height: 4px;
+    width: 100%;
+    background-color: #e0e0e0;
+    margin: 10px 0;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background-color: #2196F3;
+    transition: width 0.3s ease;
+}
+
+/* Recording styles */
+.countdown-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.countdown-number {
+    font-size: 8rem;
+    font-weight: bold;
+    color: white;
+    animation: pulse 1s infinite;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.visualizer {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    height: 80px;
+}
+
+.recording-active {
+    animation: recording-pulse 2s infinite;
+}
+
+@keyframes recording-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+/* Metronome indicator */
+.metronome-active {
+    position: relative;
+}
+
+.metronome-active::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}

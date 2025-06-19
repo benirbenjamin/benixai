@@ -1,0 +1,254 @@
+<%- include('partials/header') %>
+
+<head>
+    <!-- ... existing head content ... -->
+    <link rel="stylesheet" href="/css/audioRecorder.css">
+</head>
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-3">Studio Recording</h1>
+            
+            <% if (locals.subscription && !subscription.active) { %>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Limited features available!</strong> Please <a href="/subscription" class="alert-link">subscribe</a> to unlock full music generation capabilities.
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main recording column -->
+        <div class="col-lg-8">
+            <!-- Song Structure Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">Song Structure</h2>
+                    <button class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#songStructureContent">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div id="songStructureContent" class="card-body collapse show">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="versesCount">Number of Verses:</label>
+                                <select id="versesCount" class="form-select">
+                                    <option value="1">1 Verse</option>
+                                    <option value="2" selected>2 Verses</option>
+                                    <option value="3">3 Verses</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="chorusCount">Chorus:</label>
+                                <select id="chorusCount" class="form-select">
+                                    <option value="1" selected>1 Chorus</option>
+                                    <option value="2">2 Choruses</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" id="includeBridge" class="form-check-input" checked>
+                                <label for="includeBridge" class="form-check-label">Include Bridge</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="songStructurePreview" class="border p-3 bg-light mb-3">
+                        <strong>Structure:</strong> <span id="structureText">Verse 1 → Chorus → Verse 2 → Chorus → Bridge → Chorus</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recording Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="h5 mb-0">Voice Recording</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="currentSection">Current Section:</label>
+                                <select id="currentSection" class="form-select">
+                                    <option value="verse1">Verse 1</option>
+                                    <option value="chorus">Chorus</option>
+                                    <option value="verse2">Verse 2</option>
+                                    <option value="bridge">Bridge</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Metronome Settings:</label>
+                                <div class="input-group">
+                                    <input type="number" id="bpmInput" class="form-control" value="90" min="40" max="200" placeholder="BPM">
+                                    <select id="timeSignature" class="form-select" style="max-width: 80px;">
+                                        <option value="4/4">4/4</option>
+                                        <option value="3/4">3/4</option>
+                                        <option value="2/4">2/4</option>
+                                    </select>
+                                    <button id="metronomeToggle" class="btn btn-outline-secondary">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    <small class="text-muted">The metronome will automatically start with a 4-beat pre-count before recording</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <canvas id="visualizer" height="80" class="w-100 border rounded"></canvas>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center mb-3 gap-2">
+                        <button id="recordButton" class="btn btn-danger">
+                            <i class="fas fa-microphone me-1"></i> Record with Count-in
+                        </button>
+                        <button id="pauseButton" class="btn btn-warning" disabled>
+                            <i class="fas fa-pause me-1"></i> Pause
+                        </button>
+                        <button id="stopButton" class="btn btn-secondary" disabled>
+                            <i class="fas fa-stop me-1"></i> Stop
+                        </button>
+                    </div>
+                    
+                    <div id="recordingStatus" class="alert alert-info text-center">Ready to record</div>
+                    
+                    <audio id="audioPreview" class="w-100 mt-3 d-none" controls></audio>
+                </div>
+            </div>
+            
+            <!-- Recorded Sections List -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h2 class="h5 mb-0">Recorded Sections</h2>
+                </div>
+                <div class="card-body">
+                    <div id="recordedSections" class="mb-3">
+                        <div class="alert alert-secondary text-center">No sections recorded yet</div>
+                    </div>
+                    
+                    <div id="uploadProgress" class="progress mb-3 d-none">
+                        <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right sidebar - Music Generation -->
+        <div class="col-lg-4">
+            <!-- Generate Track Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h2 class="h5 mb-0">Generate Audio Track</h2>
+                </div>
+                <div class="card-body">
+                    <% if (locals.subscription && subscription.active) { %>
+                        <div class="form-group mb-3">
+                            <label for="genre">Music Genre:</label>
+                            <select id="genre" class="form-select">
+                                <option value="pop">Pop</option>
+                                <option value="rock">Rock</option>
+                                <option value="hiphop">Hip Hop</option>
+                                <option value="rnb">R&B</option>
+                                <option value="electronic">Electronic</option>
+                                <option value="jazz">Jazz</option>
+                                <option value="acoustic">Acoustic</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="mood">Mood:</label>
+                            <select id="mood" class="form-select">
+                                <option value="happy">Happy</option>
+                                <option value="sad">Sad</option>
+                                <option value="energetic">Energetic</option>
+                                <option value="calm">Calm</option>
+                                <option value="dark">Dark</option>
+                                <option value="uplifting">Uplifting</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="complexity">Instrumental Complexity:</label>
+                            <select id="complexity" class="form-select">
+                                <option value="simple">Simple</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="complex">Complex</option>
+                            </select>
+                        </div>
+                        
+                        <button id="generateTrackBtn" class="btn btn-primary w-100 mb-3" disabled>
+                            <i class="fas fa-magic me-1"></i> Generate Track
+                        </button>
+                        
+                        <div class="generation-status d-none">
+                            <div class="progress mb-2">
+                                <div id="generationProgress" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+                            </div>
+                            <p id="generationStatus" class="text-center">Initializing...</p>
+                        </div>
+                    <% } else { %>
+                        <div class="text-center py-3">
+                            <i class="fas fa-lock fa-3x mb-3 text-muted"></i>
+                            <h5>Premium Feature</h5>
+                            <p>Audio track generation is a premium feature.</p>
+                            <a href="/subscription" class="btn btn-outline-primary">Upgrade Account</a>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+            
+            <!-- Final Track Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="h5 mb-0">Final Track</h2>
+                </div>
+                <div class="card-body text-center">
+                    <div id="finalTrackStatus" class="alert alert-secondary">
+                        Complete all recordings and generate music to create your final track
+                    </div>
+                    
+                    <audio id="finalTrack" class="w-100 mb-3 d-none" controls></audio>
+                    
+                    <div class="btn-group d-none" id="finalTrackButtons">
+                        <button id="downloadTrackBtn" class="btn btn-success">
+                            <i class="fas fa-download me-1"></i> Download
+                        </button>
+                        <button id="shareTrackBtn" class="btn btn-info">
+                            <i class="fas fa-share-alt me-1"></i> Share
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h2 class="h5 mb-0">How To Use</h2>
+                </div>
+                <div class="card-body">
+                    <ol class="ps-3 mb-0">
+                        <li class="mb-2">Select your <strong>song structure</strong></li>
+                        <li class="mb-2">Record each section using the <strong>voice recorder</strong></li>
+                        <li class="mb-2">Choose your genre and mood</li>
+                        <li class="mb-2">Click <strong>Generate Track</strong> to create music</li>
+                        <li>Download or share your completed track</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/audioRecorder.js"></script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,399 @@
+<%- include('partials/header', { title: title || 'Payment History' }) %>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Payment History</h1>
+        <div>
+            <a href="/admin" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Payments</h5>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-light">
+                    <i class="fas fa-sync me-1"></i>Refresh
+                </button>
+                <button class="btn btn-light">
+                    <i class="fas fa-filter me-1"></i>Filter
+                </button>
+                <button class="btn btn-light">
+                    <i class="fas fa-download me-1"></i>Export
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <!-- Filter Controls -->
+            <div class="p-3 bg-light border-bottom">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control form-control-sm" id="startDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control form-control-sm" id="endDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="statusFilter" class="form-label">Status</label>
+                        <select class="form-select form-select-sm" id="statusFilter">
+                            <option value="all">All Statuses</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                            <option value="pending">Pending</option>
+                            <option value="refunded">Refunded</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="planFilter" class="form-label">Plan</label>
+                        <select class="form-select form-select-sm" id="planFilter">
+                            <option value="all">All Plans</option>
+                            <option value="basic">Basic</option>
+                            <option value="standard">Standard</option>
+                            <option value="premium">Premium</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>User</th>
+                            <th>Plan</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (payments && payments.length > 0) { %>
+                            <% payments.forEach(payment => { %>
+                                <tr>
+                                    <td><%= payment.id %></td>
+                                    <td><%= payment.email %></td>
+                                    <td><%= payment.plan.charAt(0).toUpperCase() + payment.plan.slice(1) %></td>
+                                    <td>$<%= payment.amount.toFixed(2) %></td>
+                                    <td><%= payment.date.toLocaleDateString() %></td>
+                                    <td>
+                                        <span class="badge <%= 
+                                            payment.status === 'completed' ? 'bg-success' : 
+                                            payment.status === 'failed' ? 'bg-danger' : 
+                                            payment.status === 'refunded' ? 'bg-warning text-dark' : 
+                                            'bg-secondary' 
+                                        %>">
+                                            <%= payment.status.charAt(0).toUpperCase() + payment.status.slice(1) %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary" 
+                                                    data-bs-toggle="modal" data-bs-target="#paymentModal"
+                                                    data-payment-id="<%= payment.id %>">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#">Refund Payment</a></li>
+                                                <li><a class="dropdown-item" href="#">Email Receipt</a></li>
+                                                <li><a class="dropdown-item" href="#">View Invoice</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" class="text-center py-3">No payments found</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><%= payments ? payments.length : 0 %> payments found</span>
+                <nav aria-label="Payment pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1">Previous</a>
+                        </li>
+                        <li class="page-item active">
+                            <a class="page-link" href="#">1</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Payment Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body py-2 px-3 text-center">
+                                    <h6 class="text-muted mb-1">Total Revenue</h6>
+                                    <div class="h3 mb-0 text-success">$875.00</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body py-2 px-3 text-center">
+                                    <h6 class="text-muted mb-1">This Month</h6>
+                                    <div class="h3 mb-0">$245.00</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body py-2 px-3 text-center">
+                                    <h6 class="text-muted mb-1">Success Rate</h6>
+                                    <div class="h3 mb-0">95.2%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body py-2 px-3 text-center">
+                                    <h6 class="text-muted mb-1">Refund Rate</h6>
+                                    <div class="h3 mb-0">1.8%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Revenue by Plan</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="planRevenueChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Details Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" role="dialog" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentModalLabel">Payment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Transaction Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Transaction ID</th>
+                                <td id="modalTransactionId">txn_001</td>
+                            </tr>
+                            <tr>
+                                <th>Date & Time</th>
+                                <td id="modalDateTime">2025-06-19 14:30:22</td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td id="modalStatus"><span class="badge bg-success">Completed</span></td>
+                            </tr>
+                            <tr>
+                                <th>Payment Method</th>
+                                <td id="modalPaymentMethod">Credit Card (Visa)</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Customer Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Customer</th>
+                                <td id="modalCustomer">John Doe (user@example.com)</td>
+                            </tr>
+                            <tr>
+                                <th>User ID</th>
+                                <td id="modalUserId">1</td>
+                            </tr>
+                            <tr>
+                                <th>Plan</th>
+                                <td id="modalPlan">Premium</td>
+                            </tr>
+                            <tr>
+                                <th>Subscription</th>
+                                <td id="modalSubscription">Monthly (Auto-renew)</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Invoice</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Premium Plan - Monthly Subscription</td>
+                                    <td class="text-end">$20.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Discount (WELCOME10)</td>
+                                    <td class="text-end">-$2.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end"><strong>Total</strong></td>
+                                    <td class="text-end"><strong>$18.00</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="printReceiptBtn">
+                    <i class="fas fa-print me-1"></i>Print Receipt
+                </button>
+                <button type="button" class="btn btn-warning" id="refundBtn">
+                    <i class="fas fa-undo me-1"></i>Refund Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Payment details modal
+        const paymentModal = document.getElementById('paymentModal');
+        if (paymentModal) {
+            paymentModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const paymentId = button.getAttribute('data-payment-id');
+                
+                // In a real implementation, this would fetch payment details from an API
+                document.getElementById('modalTransactionId').textContent = paymentId;
+                
+                // Set up refund button
+                document.getElementById('refundBtn').addEventListener('click', function() {
+                    if (confirm('Are you sure you want to refund this payment?')) {
+                        alert(`Payment ${paymentId} has been refunded.`);
+                        
+                        // In a real implementation, this would make an AJAX request to process the refund
+                        bootstrap.Modal.getInstance(paymentModal).hide();
+                        window.location.reload();
+                    }
+                });
+                
+                // Set up print receipt button
+                document.getElementById('printReceiptBtn').addEventListener('click', function() {
+                    alert('Printing receipt...');
+                    // In a real implementation, this would open a print dialog or generate a PDF
+                });
+            });
+        }
+        
+        // Revenue by plan chart
+        const planRevenueChart = new Chart(
+            document.getElementById('planRevenueChart').getContext('2d'),
+            {
+                type: 'pie',
+                data: {
+                    labels: ['Basic', 'Standard', 'Premium'],
+                    datasets: [{
+                        data: [75, 250, 550],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    return `${label}: $${value}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+        
+        // Date filter application
+        document.getElementById('endDate').addEventListener('change', function() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = this.value;
+            
+            if (startDate && endDate) {
+                // In a real implementation, this would filter the payments by date
+                console.log(`Filtering payments from ${startDate} to ${endDate}`);
+            }
+        });
+        
+        // Status filter
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            const status = this.value;
+            
+            // In a real implementation, this would filter the payments by status
+            console.log(`Filtering payments by status: ${status}`);
+        });
+        
+        // Plan filter
+        document.getElementById('planFilter').addEventListener('change', function() {
+            const plan = this.value;
+            
+            // In a real implementation, this would filter the payments by plan
+            console.log(`Filtering payments by plan: ${plan}`);
+        });
+    });
+</script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,66 @@
+.track-container {
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.track-container:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.track-container h4 {
+    color: #343a40;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.track-status {
+    font-weight: 500;
+}
+
+.track-timer {
+    font-family: monospace;
+    font-size: 1.1rem;
+}
+
+.record-button {
+    min-width: 100px;
+}
+
+.record-button:hover {
+    background-color: #c82333;
+}
+
+.recording {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    animation: pulse 1.5s infinite;
+}
+
+.metronome-settings {
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.metronome-settings label {
+    font-weight: 500;
+}
+
+#uploadStatus {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.6);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}

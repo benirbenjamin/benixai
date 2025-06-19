@@ -1,0 +1,242 @@
+<%- include('partials/header') %>
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="h5 mb-0">Help Topics</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" id="help-topics-list">
+                        <a href="#getting-started" class="list-group-item list-group-item-action active">Getting Started</a>
+                        <a href="#recording-audio" class="list-group-item list-group-item-action">Recording Audio</a>
+                        <a href="#music-generation" class="list-group-item list-group-item-action">Music Generation</a>
+                        <a href="#account-settings" class="list-group-item list-group-item-action">Account Settings</a>
+                        <a href="#billing" class="list-group-item list-group-item-action">Billing & Subscription</a>
+                        <a href="#troubleshooting" class="list-group-item list-group-item-action">Troubleshooting</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body text-center">
+                    <h5>Need Personal Help?</h5>
+                    <p>We're here for you!</p>
+                    <a href="/contact" class="btn btn-primary">Contact Support</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <h1 class="mb-4">Help Center</h1>
+            
+            <!-- Getting Started -->
+            <div class="card mb-4" id="getting-started">
+                <div class="card-header bg-light">
+                    <h2 class="h4 mb-0">Getting Started</h2>
+                </div>
+                <div class="card-body">
+                    <h3 class="h5">Creating Your Account</h3>
+                    <p>To use BenixSpace AI, you'll need to create an account:</p>
+                    <ol>
+                        <li>Visit <a href="https://ai.benix.space/register">ai.benix.space/register</a></li>
+                        <li>Enter your email address and create a password</li>
+                        <li>Verify your email by clicking the link in the verification email</li>
+                        <li>Complete your profile information</li>
+                    </ol>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Your free trial begins automatically when you create your account.
+                    </div>
+                    
+                    <h3 class="h5 mt-4">Navigating the Dashboard</h3>
+                    <p>The main dashboard provides access to all your music projects and account settings:</p>
+                    <ul>
+                        <li><strong>My Projects:</strong> Access all your created music tracks</li>
+                        <li><strong>Record:</strong> Begin a new recording session</li>
+                        <li><strong>Music Library:</strong> Browse your completed tracks</li>
+                        <li><strong>Account:</strong> Manage your profile and subscription</li>
+                    </ul>
+                    
+                    <div class="text-center mt-4">
+                        <img src="/images/help/dashboard-overview.jpg" alt="Dashboard Overview" class="img-fluid rounded border">
+                        <p class="text-muted mt-2">Dashboard overview with key features highlighted</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recording Audio -->
+            <div class="card mb-4" id="recording-audio">
+                <div class="card-header bg-light">
+                    <h2 class="h4 mb-0">Recording Audio</h2>
+                </div>
+                <div class="card-body">
+                    <h3 class="h5">Setting Up Your Song Structure</h3>
+                    <p>Before recording, you'll need to set up your song structure:</p>
+                    <ol>
+                        <li>Navigate to the Record page</li>
+                        <li>Select the number of verses (1-5)</li>
+                        <li>Choose whether to include a chorus and/or bridge</li>
+                        <li>Review the structure preview</li>
+                    </ol>
+                    
+                    <h3 class="h5 mt-4">Recording Tips</h3>
+                    <p>For the best recording quality:</p>
+                    <ul>
+                        <li>Use a quiet environment with minimal background noise</li>
+                        <li>Position yourself 6-12 inches from the microphone</li>
+                        <li>Use headphones to avoid audio feedback</li>
+                        <li>Test your microphone levels before recording</li>
+                        <li>Use the metronome to keep your timing consistent</li>
+                    </ul>
+                    
+                    <h3 class="h5 mt-4">Using the Metronome</h3>
+                    <p>The metronome helps you maintain a consistent tempo while recording:</p>
+                    <ol>
+                        <li>Set your desired BPM (beats per minute)</li>
+                        <li>Select the time signature (3/4 or 4/4)</li>
+                        <li>Click the metronome button to start</li>
+                        <li>The first beat of each bar will be accented</li>
+                    </ol>
+                    
+                    <h3 class="h5 mt-4">Re-recording Sections</h3>
+                    <p>If you're not satisfied with a recording, you can re-record any section:</p>
+                    <ol>
+                        <li>Select the section you want to re-record from the dropdown menu</li>
+                        <li>Click "Record" to start a new recording</li>
+                        <li>The new recording will replace the previous one for that section</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <!-- More help sections continue here with the same structure -->
+            <div class="card mb-4" id="music-generation">
+                <div class="card-header bg-light">
+                    <h2 class="h4 mb-0">Music Generation</h2>
+                </div>
+                <div class="card-body">
+                    <h3 class="h5">Generating Your Track</h3>
+                    <p>Once you've recorded all sections, you can generate your music:</p>
+                    <ol>
+                        <li>Ensure all song sections are recorded</li>
+                        <li>Select your preferred music genre</li>
+                        <li>Choose the mood that best fits your recording</li>
+                        <li>Set the instrumental complexity level</li>
+                        <li>Click "Generate Track" to begin the AI process</li>
+                    </ol>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Generation may take 1-3 minutes depending on track length and server load.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Continue with other help sections -->
+            
+            <div class="card" id="troubleshooting">
+                <div class="card-header bg-light">
+                    <h2 class="h4 mb-0">Troubleshooting</h2>
+                </div>
+                <div class="card-body">
+                    <h3 class="h5">Common Issues</h3>
+                    
+                    <div class="accordion mt-3" id="troubleshootingAccordion">
+                        <div class="accordion-item">
+                            <h4 class="accordion-header" id="headingMic">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMic">
+                                    Microphone Not Working
+                                </button>
+                            </h4>
+                            <div id="collapseMic" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p>If your microphone isn't working:</p>
+                                    <ol>
+                                        <li>Check that your microphone is properly connected</li>
+                                        <li>Make sure you've granted browser permissions for microphone access</li>
+                                        <li>Verify that no other applications are using your microphone</li>
+                                        <li>Try selecting a different input device in your browser settings</li>
+                                        <li>Restart your browser</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h4 class="accordion-header" id="headingUpload">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpload">
+                                    Upload Failures
+                                </button>
+                            </h4>
+                            <div id="collapseUpload" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p>If your recordings aren't uploading:</p>
+                                    <ol>
+                                        <li>Check your internet connection</li>
+                                        <li>Make sure your recording doesn't exceed the 10MB size limit</li>
+                                        <li>Try a shorter recording session</li>
+                                        <li>Check that your browser is up-to-date</li>
+                                        <li>Clear your browser cache and cookies</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h4 class="accordion-header" id="headingGeneration">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeneration">
+                                    Music Generation Failing
+                                </button>
+                            </h4>
+                            <div id="collapseGeneration" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p>If music generation is failing:</p>
+                                    <ol>
+                                        <li>Ensure all required sections are properly recorded</li>
+                                        <li>Check that your recordings are clear and have minimal background noise</li>
+                                        <li>Try a different genre or mood setting</li>
+                                        <li>Refresh the page and try again</li>
+                                        <li>Ensure your subscription is active and not expired</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add scrollspy functionality for the help topics
+    document.addEventListener('DOMContentLoaded', function() {
+        const helpTopicsList = document.getElementById('help-topics-list');
+        const links = helpTopicsList.querySelectorAll('a');
+        
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                links.forEach(l => l.classList.remove('active'));
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Scroll to the section
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                window.scrollTo({
+                    top: targetElement.offsetTop - 20,
+                    behavior: 'smooth'
+                });
+            });
+        });
+    });
+</script>
+
+<%- include('partials/footer') %>

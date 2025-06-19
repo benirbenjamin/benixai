@@ -1,0 +1,640 @@
+/**
+ * Record Page JavaScript
+ * Handles voice recording, metronome, file uploads, and music generation
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Audio context and recorder
+    let audioContext = null;
+    let recorder = null;
+    let audioChunks = [];
+    let recordingStream = null;
+    let recordingStartTime = null;
+    let recordingTimer = null;
+    let audioBlob = null;
+    let audioURL = null;
+    let uploadedAudioPath = null;
+    let analyser = null;
+    let dataArray = null;
+    let visualizerWidth = 0;
+    let visualizerHeight = 0;
+    
+    // DOM Elements
+    const startRecordingBtn = document.getElementById('startRecording');
+    const stopRecordingBtn = document.getElementById('stopRecording');
+    const recordingTimerElement = document.getElementById('recordingTimer');
+    const visualizerCanvas = document.getElementById('visualizer');
+    const canvasCtx = visualizerCanvas ? visualizerCanvas.getContext('2d') : null;
+    const recordedAudio = document.getElementById('recordedAudio');
+    const recordingPlayback = document.getElementById('recordingPlayback');
+    const reRecordBtn = document.getElementById('reRecord');
+    const useRecordingBtn = document.getElementById('useRecording');
+    
+    // Upload Elements
+    const audioFileInput = document.getElementById('audioFile');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const uploadedAudio = document.getElementById('uploadedAudio');
+    const uploadForm = document.getElementById('uploadForm');
+    const useUploadBtn = document.getElementById('useUpload');
+    
+    // Generation Elements
+    const inputStatus = document.getElementById('inputStatus');
+    const inputFilename = document.getElementById('inputFilename');
+    const generateInstrumentalBtn = document.getElementById('generateInstrumental');
+    const generateVocalsBtn = document.getElementById('generateVocals');
+    const generateChorusBtn = document.getElementById('generateChorus');
+    const resultsSection = document.getElementById('resultsSection');
+    const generatedResults = document.getElementById('generatedResults');
+    const generateAnotherBtn = document.getElementById('generateAnother');
+    
+    // Song Structure Form
+    const songStructureForm = document.getElementById('songStructureForm');
+    
+    // Metronome Elements
+    const metronomeToggle = document.getElementById('metronomeToggle');
+    const bpmInput = document.getElementById('bpmInput');
+    const decreaseBpmBtn = document.getElementById('decreaseBpm');
+    const increaseBpmBtn = document.getElementById('increaseBpm');
+    
+    /**
+     * Initialize audio recording
+     */
+    async function initializeRecording() {
+        try {
+            // Check if browser supports necessary APIs
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Your browser does not support audio recording. Please try a different browser like Chrome or Firefox.');
+            }
+            
+            // Reset audio context if it exists
+            if (audioContext) {
+                audioContext.close().catch(e => console.error('Error closing audio context:', e));
+            }
+            
+            // Create new audio context
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            console.log('Audio context state:', audioContext.state);
+            
+            // If audio context is suspended (common in browsers), attempt to resume it
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+                console.log('Audio context resumed');
+            }
+            
+            // Request microphone access
+            console.log('Requesting microphone access...');
+            recordingStream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                } 
+            });
+            console.log('Microphone access granted');
+            
+            // Create analyser for visualizer
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            
+            // Connect microphone stream to analyser
+            const microphone = audioContext.createMediaStreamSource(recordingStream);
+            microphone.connect(analyser);
+            
+            // Setup visualizer
+            if (visualizerCanvas) {
+                visualizerWidth = visualizerCanvas.width = visualizerCanvas.offsetWidth;
+                visualizerHeight = visualizerCanvas.height = 100;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                
+                // Start drawing visualizer
+                drawVisualizer();
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error initializing recording:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Start recording audio
+     */
+    function startRecording() {
+        try {
+            // Reset recording data
+            audioChunks = [];
+            
+            // Create media recorder
+            recorder = new MediaRecorder(recordingStream);
+            
+            // Handle data available event
+            recorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
+            };
+            
+            // Handle recording stopped event
+            recorder.onstop = () => {
+                // Stop the microphone stream
+                if (recordingStream) {
+                    recordingStream.getTracks().forEach(track => track.stop());
+                    recordingStream = null;
+                }
+                
+                // Clear the recording timer
+                clearInterval(recordingTimer);
+                
+                // Create audio blob from chunks
+                audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                audioURL = URL.createObjectURL(audioBlob);
+                
+                // Show playback controls
+                if (recordedAudio) {
+                    recordedAudio.src = audioURL;
+                    recordedAudio.controls = true;
+                    recordingPlayback.classList.remove('d-none');
+                }
+                
+                // Show toast notification
+                showToast('Recording complete!', 'success');
+            };
+            
+            // Start timer
+            recordingStartTime = Date.now();
+            recordingTimerElement.classList.remove('d-none');
+            recordingTimer = setInterval(updateRecordingTime, 1000);
+            updateRecordingTime(); // Initial update
+            
+            // Update UI
+            startRecordingBtn.disabled = true;
+            stopRecordingBtn.disabled = false;
+            
+            // Handle recording error event
+            recorder.onerror = (event) => {
+                console.error('Recording error:', event.error);
+                showToast('Recording error occurred. Please try again.', 'danger');
+                stopRecording();
+            };
+            
+            // Start recording - try-catch in case of runtime errors
+            try {
+                // Use timeslices to get data during recording (every 1 second)
+                recorder.start(1000);
+                console.log('Recording started');
+                
+                // Animate recording button to indicate active recording
+                startRecordingBtn.innerHTML = '<i class="fas fa-circle text-danger me-2 pulse-animation"></i>Recording...';
+                
+                // Add pulsing animation style
+                if (!document.getElementById('pulse-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'pulse-style';
+                    style.innerHTML = `
+                        @keyframes pulse {
+                            0% { opacity: 1; }
+                            50% { opacity: 0.5; }
+                            100% { opacity: 1; }
+                        }
+                        .pulse-animation {
+                            animation: pulse 1s infinite;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            } catch (startError) {
+                console.error('Error starting recorder:', startError);
+                showToast('Could not start recording: ' + startError.message, 'danger');
+                resetRecordingUI();
+            }
+        } catch (error) {
+            console.error('Error in startRecording:', error);
+            showToast('Recording failed to start: ' + error.message, 'danger');
+            resetRecordingUI();
+        }
+    }
+
+    /**
+     * Update recording timer display
+     */
+    function updateRecordingTime() {
+        const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+        const seconds = (elapsed % 60).toString().padStart(2, '0');
+        recordingTimerElement.textContent = `${minutes}:${seconds}`;
+    }
+
+    /**
+     * Draw audio visualizer
+     */
+    function drawVisualizer() {
+        if (!visualizerCanvas || !canvasCtx) return;
+        
+        // Resize canvas
+        visualizerWidth = visualizerCanvas.width = visualizerCanvas.offsetWidth;
+        visualizerHeight = visualizerCanvas.height = 100;
+        
+        // Draw function
+        function draw() {
+            // Request next frame
+            requestAnimationFrame(draw);
+            
+            // Get audio data if recording
+            if (analyser && recorder && recorder.state === 'recording') {
+                analyser.getByteTimeDomainData(dataArray);
+                
+                // Clear canvas
+                canvasCtx.fillStyle = 'rgb(240, 240, 240)';
+                canvasCtx.fillRect(0, 0, visualizerWidth, visualizerHeight);
+                
+                // Draw waveform
+                canvasCtx.lineWidth = 2;
+                canvasCtx.strokeStyle = 'rgb(220, 53, 69)'; // Bootstrap danger red
+                canvasCtx.beginPath();
+                
+                const sliceWidth = visualizerWidth / dataArray.length;
+                let x = 0;
+                
+                for (let i = 0; i < dataArray.length; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * (visualizerHeight / 2);
+                    
+                    if (i === 0) {
+                        canvasCtx.moveTo(x, y);
+                    } else {
+                        canvasCtx.lineTo(x, y);
+                    }
+                    
+                    x += sliceWidth;
+                }
+                
+                canvasCtx.lineTo(visualizerWidth, visualizerHeight / 2);
+                canvasCtx.stroke();
+            }
+        }
+        
+        draw();
+    }
+
+    /**
+     * Stop recording
+     */
+    function stopRecording() {
+        if (recorder && recorder.state !== 'inactive') {
+            // Update UI before stopping to improve perceived responsiveness
+            stopRecordingBtn.disabled = true;
+            stopRecordingBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            
+            // Stop the recorder
+            recorder.stop();
+            
+            // Update button states
+            setTimeout(() => {
+                startRecordingBtn.disabled = false;
+                startRecordingBtn.innerHTML = '<i class="fas fa-microphone me-2"></i>Start Recording';
+                stopRecordingBtn.innerHTML = '<i class="fas fa-stop me-2"></i>Stop';
+                
+                // Show notification
+                showToast('Recording completed! You can now use this recording or record again.', 'success');
+            }, 500);
+        }
+    }
+    
+    /**
+     * Reset recording UI elements
+     */
+    function resetRecordingUI() {
+        startRecordingBtn.disabled = false;
+        stopRecordingBtn.disabled = true;
+        startRecordingBtn.innerHTML = '<i class="fas fa-microphone me-2"></i>Start Recording';
+        recordingTimerElement.classList.add('d-none');
+        clearInterval(recordingTimer);
+        updateInputStatus('Not Ready', 'No audio recorded');
+    }
+    
+    /**
+     * Set active audio for processing
+     * @param {string} source - URL or path of the audio source
+     * @param {string} type - Type of audio (recorded or uploaded)
+     */
+    function setActiveAudio(source, type) {
+        if (!source) {
+            showToast('No audio available', 'warning');
+            return;
+        }
+        
+        // Update UI to show active audio
+        inputStatus.className = 'badge bg-success';
+        inputStatus.textContent = 'Ready';
+        inputFilename.textContent = type === 'recorded' ? 'Recorded audio' : 'Uploaded file';
+        
+        // Enable generation buttons based on subscription
+        const subscriptionFeatures = window.benixSpace?.subscriptionFeatures || {
+            instrumental: true,  // Default to enabled for testing
+            vocal: true,
+            chorus: true
+        };
+        
+        if (generateInstrumentalBtn) {
+            generateInstrumentalBtn.disabled = false; // Always enable for testing
+        }
+        
+        if (generateVocalsBtn) {
+            generateVocalsBtn.disabled = false; // Always enable for testing
+        }
+        
+        if (generateChorusBtn) {
+            generateChorusBtn.disabled = false; // Always enable for testing
+        }
+        
+        // If recorded, upload the audio blob to server
+        if (type === 'recorded' && audioBlob) {
+            uploadRecording();
+        }
+    }
+    
+    /**
+     * Upload the recorded audio to the server
+     */
+    function uploadRecording() {
+        if (!audioBlob) {
+            showToast('No recording available to upload', 'warning');
+            return;
+        }
+        
+        console.log('Uploading recording to server...');
+        
+        // Convert blob to base64
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = function() {
+            const base64data = reader.result;
+            
+            // Create form data for upload
+            const formData = new FormData();
+            formData.append('audioData', base64data);
+            
+            // Upload to server
+            fetch('/record/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Recording uploaded successfully:', data.filePath);
+                    uploadedAudioPath = data.filePath;
+                    showToast('Recording uploaded successfully!', 'success');
+                } else {
+                    throw new Error(data.message || 'Upload failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading recording:', error);
+                showToast('Error uploading recording: ' + error.message, 'danger');
+            });
+        };
+    }
+    
+    /**
+     * Handle file selection for upload
+     * @param {Event} e - Change event
+     */
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        console.log('File selected:', file.name, file.type);
+        
+        // Validate file type
+        const validTypes = ['audio/wav', 'audio/x-wav', 'audio/mp3', 'audio/mpeg', 'audio/webm'];
+        const isValidType = validTypes.some(type => file.type.includes(type));
+        if (!isValidType) {
+            showToast('Please select a WAV or MP3 file', 'warning');
+            audioFileInput.value = '';
+            return;
+        }
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (uploadedAudio) {
+                uploadedAudio.src = e.target.result;
+                uploadedAudio.controls = true;
+                uploadPreview.classList.remove('d-none');
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    /**
+     * Upload the audio file to the server
+     * Called when the upload form is submitted
+     */
+    function uploadAudioFile() {
+        if (!audioFileInput || !audioFileInput.files || !audioFileInput.files[0]) {
+            showToast('Please select a file first', 'warning');
+            return;
+        }
+        
+        const file = audioFileInput.files[0];
+        
+        // Create a notification area if it doesn't exist
+        let uploadStatus = document.getElementById('uploadStatus');
+        if (!uploadStatus) {
+            uploadStatus = document.createElement('div');
+            uploadStatus.id = 'uploadStatus';
+            uploadStatus.className = 'mt-3 text-center';
+            uploadForm.appendChild(uploadStatus);
+        }
+        
+        uploadStatus.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> Uploading...';
+        
+        // Create form data and append file
+        const formData = new FormData();
+        formData.append('audio', file);
+        
+        // Log the form data for debugging
+        console.log('Uploading file:', file.name, 'size:', file.size, 'type:', file.type);
+        
+        // Send to server
+        fetch('/api/upload/audio', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('HTTP error ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                uploadStatus.textContent = 'Upload successful!';
+                uploadStatus.className = 'text-success mt-3';
+                uploadedAudioPath = data.filePath;
+                
+                // Update the generation section
+                setActiveAudio(uploadedAudioPath, 'uploaded');
+                
+                showToast('File uploaded successfully!', 'success');
+            } else {
+                throw new Error(data.message || 'Upload failed');
+            }
+        })
+        .catch(error => {
+            console.error('Upload error:', error);
+            uploadStatus.textContent = 'Upload failed: ' + error.message;
+            uploadStatus.className = 'text-danger mt-3';
+            showToast('Upload failed: ' + error.message, 'danger');
+        });
+    }
+    
+    /**
+     * Update input status display
+     * @param {string} status - Status text
+     * @param {string} filename - Filename or description
+     */
+    function updateInputStatus(status, filename) {
+        if (inputStatus) {
+            inputStatus.textContent = status;
+            inputStatus.className = status === 'Ready' ? 'badge bg-success' : 'badge bg-secondary';
+        }
+        
+        if (inputFilename) {
+            inputFilename.textContent = filename;
+        }
+        
+        // Disable generation buttons
+        if (generateInstrumentalBtn) generateInstrumentalBtn.disabled = true;
+        if (generateVocalsBtn) generateVocalsBtn.disabled = true;
+        if (generateChorusBtn) generateChorusBtn.disabled = true;
+    }
+    
+    /**
+     * Show toast notification
+     * @param {string} message - Message to display
+     * @param {string} type - Bootstrap color type (success, danger, warning, info)
+     */
+    function showToast(message, type = 'info') {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+        
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.role = 'alert';
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.innerHTML = `
+            <div class="toast-header">
+                <strong class="me-auto">BenixSpace</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body ${type ? 'bg-' + type : ''} ${type ? 'text-white' : ''}">
+                ${message}
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // Initialize and show the toast
+        if (typeof bootstrap !== 'undefined') {
+            const bsToast = new bootstrap.Toast(toast, { autohide: true, delay: 5000 });
+            bsToast.show();
+        }
+        
+        // Fallback if Bootstrap JS is not loaded
+        setTimeout(() => {
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 5000);
+        }, 100);
+    }
+    
+    // Initialize UI and event listeners
+    function initializeUI() {
+        console.log('Initializing UI and event listeners');
+        
+        // Recording buttons
+        if (startRecordingBtn) {
+            startRecordingBtn.addEventListener('click', async () => {
+                try {
+                    await initializeRecording();
+                    startRecording();
+                } catch (error) {
+                    console.error('Failed to start recording:', error);
+                    showToast('Failed to start recording: ' + error.message, 'danger');
+                }
+            });
+        }
+        
+        if (stopRecordingBtn) {
+            stopRecordingBtn.addEventListener('click', stopRecording);
+        }
+        
+        if (reRecordBtn) {
+            reRecordBtn.addEventListener('click', () => {
+                recordingPlayback.classList.add('d-none');
+                startRecordingBtn.disabled = false;
+                audioBlob = null;
+                audioURL = null;
+                updateInputStatus('Not Ready', 'No audio recorded');
+            });
+        }
+        
+        if (useRecordingBtn) {
+            useRecordingBtn.addEventListener('click', () => {
+                setActiveAudio(audioURL, 'recorded');
+            });
+        }
+        
+        // Initialize file upload handlers
+        if (audioFileInput) {
+            audioFileInput.addEventListener('change', handleFileSelect);
+        }
+        
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                uploadAudioFile();
+            });
+        }
+        
+        // Log available input devices
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            navigator.mediaDevices.enumerateDevices()
+                .then(devices => {
+                    const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                    console.log(`Available audio input devices: ${audioInputs.length}`);
+                    audioInputs.forEach(device => {
+                        console.log(`- ${device.label || 'Unknown device'} (${device.deviceId.substring(0, 8)}...)`);
+                    });
+                })
+                .catch(err => console.error('Error enumerating devices:', err));
+        }
+        
+        console.log('Event listeners initialized');
+    }
+    
+    // Expose key functions globally for debugging
+    window.benixSpace = window.benixSpace || {};
+    window.benixSpace.showToast = showToast;
+    window.benixSpace.initializeRecording = initializeRecording;
+    window.benixSpace.startRecording = startRecording;
+    window.benixSpace.stopRecording = stopRecording;
+    
+    // Initialize everything
+    initializeUI();
+});
