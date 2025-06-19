@@ -49,6 +49,60 @@ document.addEventListener('DOMContentLoaded', function() {
     let songStructure = [];
     let beatCount = 0;
     
+    // Audio playback functions
+    function playAccentedClick(volume = 1.0) {
+        return new Promise((resolve) => {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.1);
+            
+            setTimeout(() => {
+                resolve();
+                oscillator.disconnect();
+                gainNode.disconnect();
+            }, 100);
+        });
+    }
+
+    function playRegularClick(volume = 0.7) {
+        return new Promise((resolve) => {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+            
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.08);
+            
+            setTimeout(() => {
+                resolve();
+                oscillator.disconnect();
+                gainNode.disconnect();
+            }, 80);
+        });
+    }
+    
     // Initialize
     initializeApp();
     
@@ -85,6 +139,60 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Share track event
         if (shareTrackBtn) shareTrackBtn.addEventListener('click', shareTrack);
+    }
+    
+    /**
+     * Downloads the audio blob as a file
+     * @param {Event} event - The click event
+     */
+    function downloadTrack(event) {
+        event.preventDefault();
+        
+        // Use the final track audio element if available
+        const finalTrack = document.getElementById('finalTrack');
+        let audioSrc = finalTrack?.src;
+        let filename = 'benixai-track.wav';
+        
+        if (!audioSrc) {
+            // Fallback to the audio preview if final track is not available
+            const audioPreview = document.getElementById('audioPreview');
+            audioSrc = audioPreview?.src;
+            filename = 'benixai-recording.wav';
+        }
+        
+        if (!audioSrc) {
+            console.error('No audio available to download');
+            alert('No audio available to download');
+            return;
+        }
+        
+        // Fetch the audio data as a blob
+        fetch(audioSrc)
+            .then(response => response.blob())
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                document.body.appendChild(a);
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                a.click();
+                
+                // Cleanup
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+            })
+            .catch(error => {
+                console.error('Download error:', error);
+                alert('Error downloading the audio');            });
+    }
+    
+    // Share track function
+    function shareTrack(event) {
+        event.preventDefault();
+        alert('Sharing functionality will be implemented in a future update.');
     }
     
     // Song Structure Functions

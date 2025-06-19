@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let metronomeInterval = null;
     let bpm = 90;
     let metronomeEnabled = true;
+    let countdownActive = false;
     
     // Setup event listeners
     if (setupButton) {
@@ -123,15 +124,23 @@ document.addEventListener('DOMContentLoaded', function() {
             await stopRecording(recordingTrackId);
         }
         
+        // If countdown is already active, don't start another one
+        if (countdownActive) return;
+        
+        // Update UI
+        const statusEl = document.getElementById(`status-${trackId}`);
+        const recordBtn = document.getElementById(`record-${trackId}`);
+        const pauseBtn = document.getElementById(`pause-${trackId}`);
+        const stopBtn = document.getElementById(`stop-${trackId}`);
+        
+        recordBtn.disabled = true;
+        
+        // Start countdown
+        await startCountdown(trackId);
+        
         try {
             // Reset variables
             audioChunks = [];
-            
-            // Update UI
-            const statusEl = document.getElementById(`status-${trackId}`);
-            const recordBtn = document.getElementById(`record-${trackId}`);
-            const pauseBtn = document.getElementById(`pause-${trackId}`);
-            const stopBtn = document.getElementById(`stop-${trackId}`);
             
             // Request microphone access
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -165,7 +174,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update UI
             statusEl.textContent = 'Recording...';
             statusEl.className = 'track-status text-danger';
-            recordBtn.disabled = true;
             pauseBtn.disabled = false;
             stopBtn.disabled = false;
             
@@ -175,12 +183,40 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Recording error:', error);
             document.getElementById(`status-${trackId}`).textContent = `Error: ${error.message}`;
+            recordBtn.disabled = false;
         }
+    }
+    
+    // Function to handle countdown before recording
+    async function startCountdown(trackId) {
+        return new Promise((resolve) => {
+            countdownActive = true;
+            const statusEl = document.getElementById(`status-${trackId}`);
+            statusEl.className = 'track-status text-warning';
+            
+            let count = 3;
+            statusEl.textContent = `Get ready: ${count}`;
+            
+            const countdownInterval = setInterval(() => {
+                count--;
+                
+                if (count > 0) {
+                    statusEl.textContent = `Get ready: ${count}`;
+                } else if (count === 0) {
+                    statusEl.textContent = 'GO!';
+                    statusEl.className = 'track-status text-success';
+                } else {
+                    clearInterval(countdownInterval);
+                    countdownActive = false;
+                    resolve();
+                }
+            }, 1000);
+        });
     }
     
     // Pause recording
     function pauseRecording(trackId) {
-        if (!mediaRecorder || recordingTrackId !== trackId) return;
+        if (!mediaRecorder || recordingTrackId !== trackId || countdownActive) return;
         
         if (mediaRecorder.state === 'recording') {
             mediaRecorder.pause();
@@ -224,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Stop recording
     function stopRecording(trackId) {
         return new Promise((resolve) => {
-            if (!mediaRecorder || recordingTrackId !== trackId) {
+            if (!mediaRecorder || recordingTrackId !== trackId || countdownActive) {
                 resolve();
                 return;
             }

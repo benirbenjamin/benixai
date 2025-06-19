@@ -1,0 +1,75 @@
+/* Audio Recorder Styling */
+
+.status-message {
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  background-color: #f0f0f0;
+  font-family: Arial, sans-serif;
+}
+
+.status-message.error {
+  background-color: #ffebee;
+  color: #c62828;
+  border-left: 4px solid #c62828;
+}
+
+.status-message.success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-left: 4px solid #2e7d32;
+}
+
+.recorder-controls {
+  margin: 20px 0;
+  display: flex;
+  gap: 10px;
+}
+
+.recorder-controls button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+#start-recording {
+  background-color: #4caf50;
+  color: white;
+}
+
+#start-recording:hover {
+  background-color: #388e3c;
+}
+
+#stop-recording {
+  background-color: #f44336;
+  color: white;
+}
+
+#stop-recording:hover {
+  background-color: #d32f2f;
+}
+
+#debug-recording {
+  background-color: #2196f3;
+  color: white;
+}
+
+#debug-recording:hover {
+  background-color: #1976d2;
+}
+
+#audio-player {
+  width: 100%;
+  margin: 20px 0;
+}
+
+#debug-info {
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
