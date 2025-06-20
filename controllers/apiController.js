@@ -8,6 +8,7 @@ const path = require('path');
 const axios = require('axios');
 const musicGenService = require('../utils/metaMusicGenService');
 const openaiService = require('../utils/openaiService'); // Keep for voice capabilities
+const { convertAudioFormat, processBase64Audio } = require('../utils/audioFormatConverter');
 
 // Flutterwave configuration (in a real project, use env variables)
 const FLUTTERWAVE_PUBLIC_KEY = process.env.FLUTTERWAVE_PUBLIC_KEY || 'FLUTTERWAVE_PUBLIC_KEY';
@@ -259,29 +260,29 @@ const apiController = {
                         message: 'Server error: Could not save the uploaded file'
                     });
                 }
-            }
-            // Handle base64 audio data
+            }            // Handle base64 audio data
             else if (req.body.audioData) {
-                const audioData = req.body.audioData;
-                const fileId = uuidv4();
-                const fileName = `${fileId}.${req.body.audioFormat || 'wav'}`;
-                const fileDest = path.join(uploadDir, fileName);
-                
-                // Extract base64 data if needed
-                let base64Data = audioData;
-                if (audioData.includes('base64,')) {
-                    base64Data = audioData.split('base64,')[1];
-                }
-                
-                try {
-                    fs.writeFileSync(fileDest, Buffer.from(base64Data, 'base64'));
-                    audioPath = `/uploads/${type}/${fileName}`;
-                    console.log(`Base64 data written to ${audioPath}`);
+                const audioData = req.body.audioData;                try {
+                    // Process the base64 audio data using our utility
+                    const result = await processBase64Audio(
+                        audioData, 
+                        req.body.audioFormat || 'wav',
+                        uploadDir
+                    );
+                    
+                    // Process with pure JavaScript WAV handling for compatibility
+                    const convertedFilePath = await ensureValidWavFile(result.path);
+                    
+                    // Get the relative path for API response
+                    const relativePath = convertedFilePath.replace(path.join(__dirname, '..'), '');
+                    audioPath = relativePath.replace(/\\/g, '/'); // Convert backslashes to forward slashes
+                    
+                    console.log(`Audio processed and available at: ${audioPath}`);
                 } catch (fileError) {
-                    console.error('Error saving audio file:', fileError);
+                    console.error('Error processing audio data:', fileError);
                     return res.status(400).json({
                         success: false,
-                        message: 'Could not process the audio data'
+                        message: 'Could not process the audio data. Please check the format and try again.'
                     });
                 }
             } else {

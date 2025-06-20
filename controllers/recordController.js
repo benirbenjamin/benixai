@@ -111,9 +111,35 @@ const recordController = {
                     message: 'Audio uploaded successfully',
                     filePath: `/uploads/${fileId}.wav`,
                     processingPath: `/uploads/voice/${fileId}.wav`
+                });            } else if (req.file) {
+                // Handle file upload from multer
+                const fileId = uuidv4();
+                const fileExt = path.extname(req.file.originalname) || '.wav';
+                
+                // Ensure directory exists
+                const voiceDir = path.join(__dirname, '../uploads/voice');
+                if (!fs.existsSync(voiceDir)) {
+                    fs.mkdirSync(voiceDir, { recursive: true });
+                }
+                
+                // Save to uploads/voice directory for actual processing
+                const voiceFilePath = path.join(voiceDir, `${fileId}${fileExt}`);
+                fs.writeFileSync(voiceFilePath, req.file.buffer);
+                
+                // Also save a copy to public/uploads for preview
+                const publicFilePath = path.join(uploadsDir, `${fileId}${fileExt}`);
+                fs.writeFileSync(publicFilePath, req.file.buffer);
+                
+                console.log(`Audio file uploaded to: ${voiceFilePath} and ${publicFilePath}`);
+                
+                return res.json({
+                    success: true,
+                    message: 'Audio file uploaded successfully',
+                    filePath: `/uploads/${fileId}${fileExt}`,
+                    processingPath: `/uploads/voice/${fileId}${fileExt}`
                 });
             } else {
-                // Handle file upload (would need multer middleware configured)
+                // No audio data provided
                 return res.status(400).json({
                     success: false,
                     message: 'No audio data provided'
@@ -322,8 +348,32 @@ const recordController = {
                 success: false,
                 message: error.message
             });
+        }    },
+    
+    // Get user's saved voice recordings
+    getSavedRecordings: async (req, res) => {
+        try {
+            const userId = req.session.user.id;
+            
+            // Get all music generations that have original voice paths
+            const recordings = await MusicGeneration.findVoiceRecordingsByUserId(userId);
+            
+            res.json({
+                success: true,
+                recordings: recordings.map(rec => ({
+                    id: rec.id,
+                    filePath: rec.original_voice_path,
+                    createdAt: rec.created_at
+                }))
+            });
+        } catch (error) {
+            console.error('Error getting saved recordings:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch recordings'
+            });
         }
-    }
+    },
 };
 
 module.exports = recordController;

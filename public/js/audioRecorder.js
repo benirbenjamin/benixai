@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let metronomeActive = false;
     let songStructure = [];
     let beatCount = 0;
+    let selectedVoiceRecording = null; // Track selected saved recording
     
     // Audio playback functions
     function playAccentedClick(volume = 1.0) {
@@ -139,6 +140,42 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Share track event
         if (shareTrackBtn) shareTrackBtn.addEventListener('click', shareTrack);
+        
+        // Event listener for saved recording selection
+        document.addEventListener('recording-selected', function(e) {
+            if (e.detail && e.detail.filePath) {
+                // Store the selected recording
+                selectedVoiceRecording = {
+                    id: e.detail.id,
+                    filePath: e.detail.filePath
+                };
+                
+                // Enable the generate track button
+                if (generateTrackBtn) {
+                    generateTrackBtn.disabled = false;
+                }
+                
+                // Show notification
+                const notification = document.createElement('div');
+                notification.className = 'alert alert-success alert-dismissible fade show';
+                notification.innerHTML = `
+                    <strong>Voice Selected!</strong> You've selected a previously recorded voice track.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                
+                // Insert notification at the top of the recording card
+                const recordingCard = document.querySelector('.card .card-body');
+                if (recordingCard) {
+                    recordingCard.insertAdjacentElement('afterbegin', notification);
+                    
+                    // Auto-dismiss after 5 seconds
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                        setTimeout(() => notification.remove(), 150);
+                    }, 5000);
+                }
+            }
+        });
     }
     
     /**
@@ -615,9 +652,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Track Generation Functions
-    function generateTrack() {
+    // Track Generation Functions    function generateTrack() {
         if (generateTrackBtn.disabled) return;
+        
+        // Check if we have a recording or a selected saved recording
+        if (Object.keys(recordedAudio).length === 0 && !selectedVoiceRecording) {
+            showError('Please record audio or select a saved recording first');
+            return;
+        }
         
         // Disable button during generation
         generateTrackBtn.disabled = true;
@@ -639,20 +681,35 @@ document.addEventListener('DOMContentLoaded', function() {
         const mood = document.getElementById('mood')?.value || 'happy';
         const complexity = document.getElementById('complexity')?.value || 'medium';
         
-        // Create FormData to send all recorded audio sections
-        const formData = new FormData();
+        // Initialize the request data
+        let requestData;
         
-        // Add all recorded audio sections to form data
-        Object.entries(recordedAudio).forEach(([section, data]) => {
-            formData.append(`audio_${section}`, data.blob, `${section}.wav`);
-        });
-        
-        // Add generation parameters
-        formData.append('genre', genre);
-        formData.append('mood', mood);
-        formData.append('complexity', complexity);
-        
-        // Start progress simulation
+        // Check if we're using a saved recording or a new recording
+        if (selectedVoiceRecording) {
+            // Use the selected recording
+            requestData = {
+                genre,
+                mood,
+                complexity,
+                audioPath: selectedVoiceRecording.filePath,
+                useExistingRecording: true
+            };
+        } else {
+            // Create FormData to send all recorded audio sections
+            const formData = new FormData();
+            
+            // Add all recorded audio sections to form data
+            Object.entries(recordedAudio).forEach(([section, data]) => {
+                formData.append(`audio_${section}`, data.blob, `${section}.wav`);
+            });
+            
+            // Add generation parameters
+            formData.append('genre', genre);
+            formData.append('mood', mood);
+            formData.append('complexity', complexity);
+              requestData = formData;
+        }
+          // Start progress simulation
         let progress = 0;
         const progressInterval = setInterval(() => {
             progress += 5;
@@ -677,19 +734,40 @@ document.addEventListener('DOMContentLoaded', function() {
             if (progress >= 100) {
                 clearInterval(progressInterval);
                 
-                // In production, you would make a real API call
-                // For now, we'll simulate by calling our endpoint directly
-                fetch('/api/generate-music', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        genre,
-                        mood,
-                        complexity
-                    })
-                })
+                // Make API call based on whether we're using a saved recording or new recording
+                let fetchPromise;
+                
+                if (selectedVoiceRecording) {
+                    // For saved recordings, use the record/generate endpoint
+                    fetchPromise = fetch('/record/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            genre,
+                            mood,
+                            complexity,
+                            audioPath: selectedVoiceRecording.filePath
+                        })
+                    });
+                } else {
+                    // For new recordings, use the api/generate-music endpoint or upload them first
+                    fetchPromise = fetch('/api/generate-music', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            genre,
+                            mood,
+                            complexity
+                        })
+                    });
+                }
+                
+                // Process the fetch result
+                fetchPromise
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`Server responded with status: ${response.status}`);
@@ -907,4 +985,124 @@ document.addEventListener('DOMContentLoaded', function() {
         const verseNum = section.replace('verse', '');
         return `Verse ${verseNum}`;
     }
+    
+    // Saved Recordings Functions
+    const savedRecordingsContainer = document.getElementById('savedRecordings');
+    const savedRecordingsList = document.getElementById('savedRecordingsList');
+    const noRecordingsMessage = document.getElementById('noRecordingsMessage');
+    
+    // Load saved recordings from server
+    function loadSavedRecordings() {
+        fetch('/api/get-saved-recordings')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.recordings)) {
+                    // Clear existing list
+                    savedRecordingsList.innerHTML = '';
+                    
+                    if (data.recordings.length === 0) {
+                        noRecordingsMessage.classList.remove('d-none');
+                    } else {
+                        noRecordingsMessage.classList.add('d-none');
+                        
+                        // Add each recording to the list
+                        data.recordings.forEach(recording => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                            
+                            const audio = document.createElement('audio');
+                            audio.controls = true;
+                            audio.src = recording.url;
+                            audio.className = 'me-2';
+                            
+                            const span = document.createElement('span');
+                            span.className = 'flex-grow-1';
+                            span.textContent = recording.name;
+                            
+                            const selectBtn = document.createElement('button');
+                            selectBtn.className = 'btn btn-sm btn-primary me-2';
+                            selectBtn.textContent = 'Select';
+                            selectBtn.onclick = () => {
+                                selectRecording(recording);
+                            };
+                            
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.className = 'btn btn-sm btn-danger';
+                            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                            deleteBtn.onclick = () => {
+                                deleteRecording(recording.id);
+                            };
+                            
+                            li.appendChild(audio);
+                            li.appendChild(span);
+                            li.appendChild(selectBtn);
+                            li.appendChild(deleteBtn);
+                            savedRecordingsList.appendChild(li);
+                        });
+                    }
+                } else {
+                    console.error('Invalid response format:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading saved recordings:', error);
+            });
+    }
+    
+    function selectRecording(recording) {
+        // Deselect previously selected recording
+        if (selectedVoiceRecording) {
+            const previouslySelected = document.getElementById(`recording-${selectedVoiceRecording.id}`);
+            if (previouslySelected) {
+                previouslySelected.classList.remove('table-primary');
+            }
+        }
+        
+        // Select new recording
+        selectedVoiceRecording = recording;
+        const selectedRow = document.getElementById(`recording-${recording.id}`);
+        if (selectedRow) {
+            selectedRow.classList.add('table-primary');
+        }
+        
+        // Load the recording in the audio player
+        const audioPlayer = document.getElementById('selectedRecordingPlayer');
+        if (audioPlayer) {
+            audioPlayer.src = recording.url;
+            audioPlayer.classList.remove('d-none');
+        }
+    }
+    
+    function deleteRecording(recordingId) {
+        if (!confirm('Are you sure you want to delete this recording?')) return;
+        
+        fetch(`/api/delete-recording/${recordingId}`, {
+            method: 'DELETE',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload saved recordings
+                loadSavedRecordings();
+                
+                // Clear selected recording if it was deleted
+                if (selectedVoiceRecording && selectedVoiceRecording.id === recordingId) {
+                    const audioPlayer = document.getElementById('selectedRecordingPlayer');
+                    if (audioPlayer) {
+                        audioPlayer.src = '';
+                        audioPlayer.classList.add('d-none');
+                    }
+                    selectedVoiceRecording = null;
+                }
+            } else {
+                console.error('Delete failed:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting recording:', error);
+        });
+    }
+    
+    // Initial load
+    loadSavedRecordings();
 });

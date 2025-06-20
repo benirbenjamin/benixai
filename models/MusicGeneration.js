@@ -198,10 +198,31 @@ class MusicGeneration {
                 'SELECT COUNT(*) as count FROM music_generations WHERE DATE(created_at) = ?',
                 [date]
             );
-            
-            return rows[0].count || 0;
+              return rows[0].count || 0;
         } catch (error) {
             console.error('Error counting generations by date:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Find all voice recordings by a user
+     * @param {number} userId - The user ID
+     * @returns {Promise<Array>} - List of recordings with voice paths
+     */
+    static async findVoiceRecordingsByUserId(userId) {
+        try {
+            const [rows] = await pool.execute(
+                `SELECT id, original_voice_path, created_at 
+                 FROM music_generations 
+                 WHERE user_id = ? AND original_voice_path IS NOT NULL
+                 ORDER BY created_at DESC`,
+                [userId]
+            );
+            
+            return rows;
+        } catch (error) {
+            console.error('Error finding voice recordings:', error);
             throw error;
         }
     }

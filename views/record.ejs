@@ -141,6 +141,44 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Saved Recordings Section - NEW -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">Saved Voice Recordings</h2>
+                    <button class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#savedRecordingsContent">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div id="savedRecordingsContent" class="card-body collapse show">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <p class="text-muted">Previously recorded or uploaded voice tracks that you can reuse:</p>
+                            
+                            <!-- File upload form -->
+                            <form id="voiceUploadForm" class="mb-3">
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="voiceFileInput" accept="audio/*">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="fas fa-upload"></i> Upload
+                                    </button>
+                                </div>
+                                <div class="form-text">Supported formats: WAV, MP3, OGG, M4A (max 10MB)</div>
+                            </form>
+                            
+                            <!-- Saved recordings container -->
+                            <div id="savedRecordingsContainer" class="mt-3">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2">Loading saved recordings...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Right sidebar - Music Generation -->
@@ -249,6 +287,68 @@
     </div>
 </div>
 
+<script src="/js/audioFix.js"></script>
+<script src="/js/audioFixUtils.js"></script>
+<script src="/js/clickSoundFix.js"></script>
+<script src="/js/generateTrackFix.js"></script>
+<script src="/js/savedRecordings.js"></script>
 <script src="/js/audioRecorder.js"></script>
+
+<!-- For debugging purposes -->
+<script>
+    // Audio format error handler
+    document.addEventListener('DOMContentLoaded', function() {
+        // Create an error display element
+        const errorDisplay = document.createElement('div');
+        errorDisplay.id = 'audioErrorMessage';
+        errorDisplay.className = 'alert alert-warning';
+        errorDisplay.style.display = 'none';
+        errorDisplay.style.position = 'fixed';
+        errorDisplay.style.bottom = '20px';
+        errorDisplay.style.right = '20px';
+        errorDisplay.style.zIndex = '9999';
+        document.body.appendChild(errorDisplay);
+        
+        // Apply audio fixes
+        if (typeof applyAudioFixes === 'function') {
+            applyAudioFixes();
+        }
+        
+        // Add specific fixes for the audio player
+        const finalTrack = document.getElementById('finalTrack');
+        if (finalTrack) {
+            finalTrack.addEventListener('error', function(e) {
+                console.error('Final track error:', e);
+                errorDisplay.textContent = 'Error loading generated track. Trying to fix...';
+                errorDisplay.style.display = 'block';
+                
+                // Try loading as WAV
+                if (this.src.includes('.mp3')) {
+                    this.src = this.src.replace('.mp3', '.wav');
+                } else if (this.src.includes('blob:')) {
+                    // For blob URLs, try to fetch and convert
+                    fetch(this.src)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            if (window.audioFix && window.audioFix.convertToWav) {
+                                return window.audioFix.convertToWav(blob);
+                            }
+                            return blob;
+                        })
+                        .then(wavBlob => {
+                            this.src = URL.createObjectURL(wavBlob);
+                            this.load();
+                            errorDisplay.textContent = 'Fixed! Playing...';
+                            setTimeout(() => {
+                                errorDisplay.style.display = 'none';
+                            }, 3000);
+                        });
+                }
+                
+                this.load();
+            });
+        }
+    });
+</script>
 
 <%- include('partials/footer') %>

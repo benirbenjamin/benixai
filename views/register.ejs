@@ -1,46 +1,100 @@
 <%- include('partials/header') %>
 
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Create an Account</h4>
-            </div>
-            <div class="card-body">                <form action="/register" method="POST" id="registerForm">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="firstName" class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="firstName" name="firstName">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="auth-form-container fade-in">
+                <div class="card-header text-center">
+                    <img src="/images/logo.png" alt="BenixAI Logo" class="img-fluid mb-3" style="max-width: 120px;">
+                    <h1>Create Account</h1>
+                    <p class="text-light">Join BenixAI and start creating amazing music</p>
+                </div>
+                <div class="card-body">
+                    <form action="/register" method="POST" id="registerForm" class="auth-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="firstName" class="form-label">First Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Your first name">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lastName" class="form-label">Last Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Your last name">
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="lastName" class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="lastName" name="lastName">
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="phoneNumber" class="form-label">Phone Number</label>
-                        <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Optional">
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required minlength="6">
-                        <div class="form-text">Password must be at least 6 characters long</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="confirmPassword" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Register</button>
-                    </div>
-                </form>
-            </div>
-            <div class="card-footer text-center">
-                <p class="mb-0">Already have an account? <a href="/login">Login</a></p>
+                        
+                        <div class="mb-3">
+                            <label for="phoneNumber" class="form-label">Phone Number <span class="text-muted">(Optional)</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-phone"></i>
+                                </span>
+                                <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Your phone number">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Create Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="password" name="password" required minlength="6" placeholder="Create a secure password">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Password must be at least 6 characters long</div>
+                            <div class="password-strength-meter mt-2"></div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required placeholder="Confirm your password">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">
+                                I agree to the <a href="/terms" class="text-secondary">Terms of Service</a> and <a href="/privacy" class="text-secondary">Privacy Policy</a>
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mb-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </button>
+                        </div>
+                        
+                        <div class="text-center">
+                            <p class="mb-0">Already have an account? <a href="/login" class="text-secondary fw-bold">Login</a></p>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -56,6 +110,71 @@
             event.preventDefault();
             alert('Passwords do not match. Please try again.');
         }
+    });
+    
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const icon = this.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+    
+    // Simple password strength meter
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        const meterElement = document.querySelector('.password-strength-meter');
+        
+        // Clear previous states
+        meterElement.className = 'password-strength-meter mt-2';
+        meterElement.innerHTML = '';
+        
+        if (password.length === 0) return;
+        
+        // Calculate strength
+        let strength = 0;
+        
+        // Length check
+        if (password.length >= 8) strength += 1;
+        
+        // Complexity checks
+        if (/[A-Z]/.test(password)) strength += 1; // Has uppercase
+        if (/[a-z]/.test(password)) strength += 1; // Has lowercase
+        if (/[0-9]/.test(password)) strength += 1; // Has number
+        if (/[^A-Za-z0-9]/.test(password)) strength += 1; // Has special character
+        
+        // Show strength indicator
+        let strengthText = '';
+        let strengthClass = '';
+        
+        if (strength < 2) {
+            strengthText = 'Weak';
+            strengthClass = 'bg-danger';
+        } else if (strength < 4) {
+            strengthText = 'Medium';
+            strengthClass = 'bg-warning';
+        } else {
+            strengthText = 'Strong';
+            strengthClass = 'bg-success';
+        }
+        
+        meterElement.innerHTML = `
+            <div class="progress" style="height: 5px;">
+                <div class="progress-bar ${strengthClass}" style="width: ${strength * 20}%"></div>
+            </div>
+            <small class="mt-1 d-inline-block text-${strengthClass === 'bg-danger' ? 'danger' : 
+                                               (strengthClass === 'bg-warning' ? 'warning' : 'success')}">
+                ${strengthText} password
+            </small>
+        `;
     });
 </script>
 

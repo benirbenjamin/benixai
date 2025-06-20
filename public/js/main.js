@@ -16,6 +16,28 @@ document.addEventListener('DOMContentLoaded', function() {
     popoverTriggerList.map(function(popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl);
     });
+      // Apply audio fixes if the fix modules are loaded
+    if (typeof applyAudioFixes === 'function') {
+        applyAudioFixes();
+    } else {
+        // Fallback audio fix if the function isn't loaded from audioFixUtils.js
+        document.querySelectorAll('audio').forEach(audio => {
+            audio.addEventListener('error', function(e) {
+                console.error('Audio error detected:', e);
+                
+                // Try to recover
+                const src = this.src;
+                
+                setTimeout(() => {
+                    this.src = '';
+                    setTimeout(() => {
+                        this.src = src;
+                        this.load();
+                    }, 500);
+                }, 500);
+            });
+        });
+    }
     
     // Auto-dismiss alerts
     setTimeout(() => {
@@ -221,6 +243,86 @@ function updateUIFromSubscription(status) {
                 '<i class="fas fa-times text-danger"></i>';
         }
     });
+}
+
+/**
+ * Apply fixes to audio elements and recording
+ * Addresses the MEDIA_ELEMENT_ERROR: Format error issue
+ */
+function applyAudioFixes() {
+    // Check if audio element fix module is loaded
+    if (window.audioFix) {
+        // Fix all existing audio elements
+        document.querySelectorAll('audio').forEach(audio => {
+            window.audioFix.fixAudioElement(audio);
+        });
+        
+        // Watch for new audio elements
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.tagName === 'AUDIO') {
+                        window.audioFix.fixAudioElement(node);
+                    } else if (node.querySelectorAll) {
+                        node.querySelectorAll('audio').forEach(audio => {
+                            window.audioFix.fixAudioElement(audio);
+                        });
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+    
+    // Fix recording if on a recording page
+    if (window.clickSoundFix) {
+        // Override MediaRecorder creation to use optimal settings
+        const originalMediaRecorder = window.MediaRecorder;
+        window.MediaRecorder = function(stream, options) {
+            const optimalOptions = window.clickSoundFix.getOptimalRecordingConfig();
+            const mergedOptions = { ...optimalOptions, ...options };
+            const recorder = new originalMediaRecorder(stream, mergedOptions);
+            window.clickSoundFix.fixMediaRecorder(recorder);
+            return recorder;
+        };
+        window.MediaRecorder.isTypeSupported = originalMediaRecorder.isTypeSupported;
+    }
+    
+    // Add error handler for audio playback issues
+    window.addEventListener('error', function(event) {
+        if (event.target && event.target.tagName === 'AUDIO') {
+            console.error('Audio error detected:', event);
+            const audioElement = event.target;
+            
+            // Create error notification
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-warning alert-dismissible fade show';
+            errorDiv.innerHTML = `
+                <strong>Audio Playback Issue:</strong> 
+                There was a problem playing this audio. Trying to fix...
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert error notification before the audio element
+            audioElement.parentNode.insertBefore(errorDiv, audioElement);
+            
+            // Fix the audio element
+            if (window.audioFix) {
+                window.audioFix.fixAudioElement(audioElement);
+            } else {
+                // Basic recovery
+                setTimeout(() => {
+                    const src = audioElement.src;
+                    audioElement.src = '';
+                    setTimeout(() => {
+                        audioElement.src = src;
+                        audioElement.load();
+                    }, 100);
+                }, 100);
+            }
+        }
+    }, true);
 }
 
 // Export functions for other scripts
